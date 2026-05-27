@@ -1,0 +1,766 @@
+[
+  {
+    "code": "9233",
+    "label": "Perú"
+  },
+  {
+    "code": "9327",
+    "label": "Afganistán"
+  },
+  {
+    "code": "9443",
+    "label": "Albania"
+  },
+  {
+    "code": "9402",
+    "label": "Alemania"
+  },
+  {
+    "code": "9401",
+    "label": "Alemania República Democrática"
+  },
+  {
+    "code": "9442",
+    "label": "Andorra, Principado De"
+  },
+  {
+    "code": "9113",
+    "label": "Angola"
+  },
+  {
+    "code": "9237",
+    "label": "Antigua Y Barbuda"
+  },
+  {
+    "code": "9201",
+    "label": "Antillas Holandesas"
+  },
+  {
+    "code": "9319",
+    "label": "Arabia Saudita"
+  },
+  {
+    "code": "9101",
+    "label": "Argelia"
+  },
+  {
+    "code": "9202",
+    "label": "Argentina"
+  },
+  {
+    "code": "9501",
+    "label": "Australia"
+  },
+  {
+    "code": "9403",
+    "label": "Austria"
+  },
+  {
+    "code": "9446",
+    "label": "Azerbaiyán"
+  },
+  {
+    "code": "9203",
+    "label": "Bahamas, Islas"
+  },
+  {
+    "code": "9334",
+    "label": "Bangladesh"
+  },
+  {
+    "code": "9229",
+    "label": "Barbados"
+  },
+  {
+    "code": "9341",
+    "label": "Barein"
+  },
+  {
+    "code": "9404",
+    "label": "Bélgica"
+  },
+  {
+    "code": "9232",
+    "label": "Belice"
+  },
+  {
+    "code": "9436",
+    "label": "Bielorrusia"
+  },
+  {
+    "code": "9340",
+    "label": "Birmania"
+  },
+  {
+    "code": "9204",
+    "label": "Bolivia"
+  },
+  {
+    "code": "9445",
+    "label": "Bosnia Y Herzegovina"
+  },
+  {
+    "code": "9130",
+    "label": "Botsuana"
+  },
+  {
+    "code": "9205",
+    "label": "Brasil"
+  },
+  {
+    "code": "9345",
+    "label": "Brunéi"
+  },
+  {
+    "code": "9405",
+    "label": "Bulgaria"
+  },
+  {
+    "code": "9114",
+    "label": "Burkina Faso"
+  },
+  {
+    "code": "9333",
+    "label": "Camboya"
+  },
+  {
+    "code": "9123",
+    "label": "Camerún"
+  },
+  {
+    "code": "9206",
+    "label": "Canadá"
+  },
+  {
+    "code": "9241",
+    "label": "Caribe Neerlandés"
+  },
+  {
+    "code": "9338",
+    "label": "Catar"
+  },
+  {
+    "code": "9210",
+    "label": "Chile"
+  },
+  {
+    "code": "9302",
+    "label": "China, República Popular"
+  },
+  {
+    "code": "9407",
+    "label": "Chipre"
+  },
+  {
+    "code": "9207",
+    "label": "Colombia"
+  },
+  {
+    "code": "9316",
+    "label": "Corea Del Norte"
+  },
+  {
+    "code": "9102",
+    "label": "Costa De Marfil"
+  },
+  {
+    "code": "9208",
+    "label": "Costa Rica"
+  },
+  {
+    "code": "9431",
+    "label": "Croacia"
+  },
+  {
+    "code": "9209",
+    "label": "Cuba"
+  },
+  {
+    "code": "9408",
+    "label": "Dinamarca"
+  },
+  {
+    "code": "9234",
+    "label": "Dominica"
+  },
+  {
+    "code": "9211",
+    "label": "Ecuador"
+  },
+  {
+    "code": "9212",
+    "label": "El Salvador"
+  },
+  {
+    "code": "9337",
+    "label": "Emiratos Árabes Unidos"
+  },
+  {
+    "code": "9438",
+    "label": "Eslovaquia"
+  },
+  {
+    "code": "9433",
+    "label": "Eslovenia"
+  },
+  {
+    "code": "9409",
+    "label": "España"
+  },
+  {
+    "code": "9213",
+    "label": "Estados Unidos De América"
+  },
+  {
+    "code": "9444",
+    "label": "Estonia"
+  },
+  {
+    "code": "9120",
+    "label": "Etiopía"
+  },
+  {
+    "code": "9332",
+    "label": "Filipinas"
+  },
+  {
+    "code": "9410",
+    "label": "Finlandia"
+  },
+  {
+    "code": "9411",
+    "label": "Francia"
+  },
+  {
+    "code": "9131",
+    "label": "Gabón"
+  },
+  {
+    "code": "9331",
+    "label": "Georgia"
+  },
+  {
+    "code": "9112",
+    "label": "Ghana"
+  },
+  {
+    "code": "9240",
+    "label": "Granada"
+  },
+  {
+    "code": "9413",
+    "label": "Grecia"
+  },
+  {
+    "code": "9215",
+    "label": "Guatemala"
+  },
+  {
+    "code": "9230",
+    "label": "Guayana Francesa"
+  },
+  {
+    "code": "9122",
+    "label": "Guinea Ecuatorial"
+  },
+  {
+    "code": "9231",
+    "label": "Guyana"
+  },
+  {
+    "code": "9216",
+    "label": "Haití"
+  },
+  {
+    "code": "9217",
+    "label": "Honduras"
+  },
+  {
+    "code": "9303",
+    "label": "Hong Kong (Colonia Británica)"
+  },
+  {
+    "code": "9415",
+    "label": "Hungría"
+  },
+  {
+    "code": "9304",
+    "label": "India"
+  },
+  {
+    "code": "9311",
+    "label": "Indonesia"
+  },
+  {
+    "code": "9305",
+    "label": "Irak"
+  },
+  {
+    "code": "9324",
+    "label": "Irán"
+  },
+  {
+    "code": "9418",
+    "label": "Irlanda"
+  },
+  {
+    "code": "9441",
+    "label": "Irlanda Del Norte"
+  },
+  {
+    "code": "9453",
+    "label": "Isla De Jersey"
+  },
+  {
+    "code": "9416",
+    "label": "Islandia"
+  },
+  {
+    "code": "9238",
+    "label": "Islas Bermudas"
+  },
+  {
+    "code": "9236",
+    "label": "Islas Caimán"
+  },
+  {
+    "code": "9306",
+    "label": "Israel"
+  },
+  {
+    "code": "9417",
+    "label": "Italia"
+  },
+  {
+    "code": "9218",
+    "label": "Jamaica"
+  },
+  {
+    "code": "9307",
+    "label": "Japón"
+  },
+  {
+    "code": "9313",
+    "label": "Jordania"
+  },
+  {
+    "code": "9321",
+    "label": "Kazajstán"
+  },
+  {
+    "code": "9104",
+    "label": "Kenia"
+  },
+  {
+    "code": "9326",
+    "label": "Kirguistán"
+  },
+  {
+    "code": "9328",
+    "label": "Kuwait"
+  },
+  {
+    "code": "9439",
+    "label": "Letonia"
+  },
+  {
+    "code": "9308",
+    "label": "Líbano"
+  },
+  {
+    "code": "9141",
+    "label": "Liberia"
+  },
+  {
+    "code": "9116",
+    "label": "Libia"
+  },
+  {
+    "code": "9419",
+    "label": "Liechtenstein, Principado De"
+  },
+  {
+    "code": "9440",
+    "label": "Lituania"
+  },
+  {
+    "code": "9420",
+    "label": "Luxemburgo, Gran Ducado De"
+  },
+  {
+    "code": "9437",
+    "label": "Macedonia"
+  },
+  {
+    "code": "9119",
+    "label": "Madagascar"
+  },
+  {
+    "code": "9330",
+    "label": "Malasia"
+  },
+  {
+    "code": "9421",
+    "label": "Malta"
+  },
+  {
+    "code": "9105",
+    "label": "Marruecos"
+  },
+  {
+    "code": "9129",
+    "label": "Mauricio"
+  },
+  {
+    "code": "9219",
+    "label": "México"
+  },
+  {
+    "code": "9506",
+    "label": "Micronesia"
+  },
+  {
+    "code": "9432",
+    "label": "Moldavia"
+  },
+  {
+    "code": "9422",
+    "label": "Mónaco, Principado De"
+  },
+  {
+    "code": "9317",
+    "label": "Mongolia"
+  },
+  {
+    "code": "9452",
+    "label": "Montenegro"
+  },
+  {
+    "code": "9117",
+    "label": "Mozambique"
+  },
+  {
+    "code": "9132",
+    "label": "Namibia"
+  },
+  {
+    "code": "9336",
+    "label": "Nepal"
+  },
+  {
+    "code": "9220",
+    "label": "Nicaragua"
+  },
+  {
+    "code": "9111",
+    "label": "Nigeria"
+  },
+  {
+    "code": "9423",
+    "label": "Noruega"
+  },
+  {
+    "code": "9502",
+    "label": "Nueva Zelanda"
+  },
+  {
+    "code": "9339",
+    "label": "Omán"
+  },
+  {
+    "code": "9414",
+    "label": "Países Bajos"
+  },
+  {
+    "code": "9318",
+    "label": "Pakistán"
+  },
+  {
+    "code": "9505",
+    "label": "Palau"
+  },
+  {
+    "code": "9314",
+    "label": "Palestina"
+  },
+  {
+    "code": "9221",
+    "label": "Panamá"
+  },
+  {
+    "code": "9503",
+    "label": "Papúa Nueva Guinea"
+  },
+  {
+    "code": "9222",
+    "label": "Paraguay"
+  },
+  {
+    "code": "9424",
+    "label": "Polonia"
+  },
+  {
+    "code": "9425",
+    "label": "Portugal"
+  },
+  {
+    "code": "9223",
+    "label": "Puerto Rico"
+  },
+  {
+    "code": "9450",
+    "label": "R. Unido de G. Bretaña e Irlanda del Nte."
+  },
+  {
+    "code": "9412",
+    "label": "Reino Unido"
+  },
+  {
+    "code": "9143",
+    "label": "Rep. Democrática De Santo Tome Y Príncipe"
+  },
+  {
+    "code": "9124",
+    "label": "Rep. Democrática Del Congo"
+  },
+  {
+    "code": "9103",
+    "label": "República Árabe De Egipto"
+  },
+  {
+    "code": "9406",
+    "label": "República Checa"
+  },
+  {
+    "code": "9346",
+    "label": "República De Armenia"
+  },
+  {
+    "code": "9125",
+    "label": "República De Burundi"
+  },
+  {
+    "code": "9136",
+    "label": "República De Cabo Verde"
+  },
+  {
+    "code": "9301",
+    "label": "Republica de Corea del Sur"
+  },
+  {
+    "code": "9508",
+    "label": "República De Fiyi"
+  },
+  {
+    "code": "9134",
+    "label": "República De Gambia"
+  },
+  {
+    "code": "9127",
+    "label": "República De Guinea"
+  },
+  {
+    "code": "9142",
+    "label": "República De Guinea - Bisau"
+  },
+  {
+    "code": "9507",
+    "label": "República De Kiribati"
+  },
+  {
+    "code": "9147",
+    "label": "República De Las Seychelles"
+  },
+  {
+    "code": "9138",
+    "label": "República De Níger"
+  },
+  {
+    "code": "9144",
+    "label": "República De Ruanda"
+  },
+  {
+    "code": "9140",
+    "label": "República De Uganda"
+  },
+  {
+    "code": "9133",
+    "label": "República Del Congo"
+  },
+  {
+    "code": "9347",
+    "label": "República Democrática De Timor Oriental"
+  },
+  {
+    "code": "9349",
+    "label": "República Democrática Popular Lao"
+  },
+  {
+    "code": "9224",
+    "label": "República Dominicana"
+  },
+  {
+    "code": "9145",
+    "label": "República Islámica De Mauritania"
+  },
+  {
+    "code": "9146",
+    "label": "República Togolesa"
+  },
+  {
+    "code": "9126",
+    "label": "República Unida De Tanzania"
+  },
+  {
+    "code": "9426",
+    "label": "Rumania"
+  },
+  {
+    "code": "9429",
+    "label": "Rusia"
+  },
+  {
+    "code": "9504",
+    "label": "Samoa Americana"
+  },
+  {
+    "code": "9239",
+    "label": "San Cristobal Y Nieves"
+  },
+  {
+    "code": "9447",
+    "label": "San Marino, República De"
+  },
+  {
+    "code": "9242",
+    "label": "San Vicente Y Las Granadinas"
+  },
+  {
+    "code": "9235",
+    "label": "Santa Lucía"
+  },
+  {
+    "code": "9121",
+    "label": "Senegal"
+  },
+  {
+    "code": "9448",
+    "label": "Serbia"
+  },
+  {
+    "code": "9135",
+    "label": "Sierra Leona"
+  },
+  {
+    "code": "9325",
+    "label": "Singapur"
+  },
+  {
+    "code": "9312",
+    "label": "Siria"
+  },
+  {
+    "code": "9110",
+    "label": "Somalia"
+  },
+  {
+    "code": "9309",
+    "label": "Sri Lanka"
+  },
+  {
+    "code": "9106",
+    "label": "Sudáfrica"
+  },
+  {
+    "code": "9128",
+    "label": "Sudán"
+  },
+  {
+    "code": "9427",
+    "label": "Suecia"
+  },
+  {
+    "code": "9428",
+    "label": "Suiza"
+  },
+  {
+    "code": "9225",
+    "label": "Surinam"
+  },
+  {
+    "code": "9118",
+    "label": "Swazilandia"
+  },
+  {
+    "code": "9310",
+    "label": "Tailandia"
+  },
+  {
+    "code": "9323",
+    "label": "Taiwán"
+  },
+  {
+    "code": "9342",
+    "label": "Tayikistán"
+  },
+  {
+    "code": "9226",
+    "label": "Trinidad Y Tobago"
+  },
+  {
+    "code": "9109",
+    "label": "Túnez"
+  },
+  {
+    "code": "9329",
+    "label": "Turkmenistán"
+  },
+  {
+    "code": "9315",
+    "label": "Turquía"
+  },
+  {
+    "code": "9434",
+    "label": "Ucrania"
+  },
+  {
+    "code": "9139",
+    "label": "Unión De Las Comoras"
+  },
+  {
+    "code": "9227",
+    "label": "Uruguay"
+  },
+  {
+    "code": "9343",
+    "label": "Uzbekistán"
+  },
+  {
+    "code": "9228",
+    "label": "Venezuela"
+  },
+  {
+    "code": "9320",
+    "label": "Vietnam"
+  },
+  {
+    "code": "9322",
+    "label": "Yemen"
+  },
+  {
+    "code": "9430",
+    "label": "Yugoslavia"
+  },
+  {
+    "code": "9115",
+    "label": "Zaire"
+  },
+  {
+    "code": "9107",
+    "label": "Zambia"
+  },
+  {
+    "code": "9108",
+    "label": "Zimbabwe"
+  }
+]

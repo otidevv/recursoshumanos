@@ -1,0 +1,385 @@
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e4]:
+        - button "Menú" [ref=e5] [cursor=pointer]:
+          - img [ref=e6]
+        - generic [ref=e8]:
+          - img [ref=e9]
+          - generic [ref=e293]: Admin
+      - generic [ref=e13]:
+        - img [ref=e14]
+        - textbox "Buscar usuarios, grupos, ajustes o dispositivos" [ref=e17]
+      - generic [ref=e18]:
+        - button "Notificaciones" [ref=e20] [cursor=pointer]:
+          - img [ref=e21]
+          - generic [ref=e24]: "3"
+        - button "Cuenta" [ref=e26] [cursor=pointer]: AM
+    - generic [ref=e27]:
+      - complementary [ref=e294]:
+        - navigation [ref=e295]:
+          - link "Usuarios" [ref=e297] [cursor=pointer]:
+            - /url: /usuarios
+            - img [ref=e299]
+            - generic [ref=e304]: Usuarios
+          - link "Roles" [ref=e306] [cursor=pointer]:
+            - /url: /roles
+            - img [ref=e308]
+            - generic [ref=e310]: Roles
+      - main [ref=e28]:
+        - generic [ref=e29]:
+          - generic [ref=e30]:
+            - generic [ref=e31]:
+              - heading "Roles administrativos" [level=1] [ref=e32]
+              - generic [ref=e311]: 5 roles · 5 del sistema · 0 personalizados · 11 usuarios
+            - button "Crear rol" [ref=e34]:
+              - img [ref=e35]
+              - text: Crear rol
+          - generic [ref=e37]:
+            - generic [ref=e38]:
+              - generic [ref=e39]:
+                - img [ref=e40]
+                - textbox "Buscar rol…" [ref=e43]
+              - generic [ref=e44]:
+                - button "Todos · 5" [ref=e45]
+                - button "Sistema · 5" [ref=e46]
+                - button "Personalizados · 0" [ref=e47]
+              - generic [ref=e48]:
+                - button "Administrador Sistema 2 usuarios · 11 permisos" [ref=e49] [cursor=pointer]:
+                  - img [ref=e51]
+                  - generic [ref=e53]:
+                    - generic [ref=e54]:
+                      - text: Administrador
+                      - generic [ref=e55]: Sistema
+                    - generic [ref=e56]: 2 usuarios · 11 permisos
+                  - img [ref=e57]
+                - button "Consulta Sistema 4 usuarios · 4 permisos" [ref=e59] [cursor=pointer]:
+                  - img [ref=e61]
+                  - generic [ref=e63]:
+                    - generic [ref=e64]:
+                      - text: Consulta
+                      - generic [ref=e65]: Sistema
+                    - generic [ref=e66]: 4 usuarios · 4 permisos
+                  - img [ref=e67]
+                - button "Editor Sistema 3 usuarios · 6 permisos" [ref=e69] [cursor=pointer]:
+                  - img [ref=e71]
+                  - generic [ref=e73]:
+                    - generic [ref=e74]:
+                      - text: Editor
+                      - generic [ref=e75]: Sistema
+                    - generic [ref=e76]: 3 usuarios · 6 permisos
+                  - img [ref=e77]
+                - button "Reportante Sistema 0 usuarios · 2 permisos" [ref=e79] [cursor=pointer]:
+                  - img [ref=e81]
+                  - generic [ref=e83]:
+                    - generic [ref=e84]:
+                      - text: Reportante
+                      - generic [ref=e85]: Sistema
+                    - generic [ref=e86]: 0 usuarios · 2 permisos
+                  - img [ref=e87]
+                - button "Superadministrador Sistema 1 usuario · 14 permisos" [ref=e89] [cursor=pointer]:
+                  - img [ref=e91]
+                  - generic [ref=e93]:
+                    - generic [ref=e94]:
+                      - text: Superadministrador
+                      - generic [ref=e95]: Sistema
+                    - generic [ref=e96]: 1 usuario · 14 permisos
+                  - img [ref=e97]
+            - generic [ref=e99]:
+              - generic [ref=e100]:
+                - generic [ref=e101]:
+                  - heading "Administrador Sistema" [level=2] [ref=e102]:
+                    - text: Administrador
+                    - generic [ref=e103]: Sistema
+                  - paragraph [ref=e104]: Gestiona usuarios, grupos y consulta auditoría.
+                - generic [ref=e105]:
+                  - button "Editar" [disabled] [ref=e106] [cursor=pointer]
+                  - button "Eliminar" [disabled] [ref=e107] [cursor=pointer]
+              - generic [ref=e108]:
+                - button "Permisos 11" [ref=e109]:
+                  - text: Permisos
+                  - generic [ref=e110]: "11"
+                - button "Usuarios 2" [ref=e111]:
+                  - text: Usuarios
+                  - generic [ref=e112]: "2"
+                - button "Detalles" [ref=e113]
+              - generic [ref=e114]:
+                - generic [ref=e115]:
+                  - img [ref=e116]
+                  - paragraph [ref=e118]: Este es un rol del sistema. Sus permisos están definidos en código y no se pueden modificar desde la interfaz.
+                - generic [ref=e119]:
+                  - generic [ref=e120]:
+                    - img [ref=e121]
+                    - textbox "Buscar permiso…" [ref=e124]
+                  - generic [ref=e125]: 11 / 14
+                - generic [ref=e126]:
+                  - button "Directorio 5/5" [disabled] [ref=e128]:
+                    - img [ref=e130]
+                    - img [ref=e132]
+                    - generic [ref=e137]: Directorio
+                    - generic [ref=e138]: 5/5
+                  - list [ref=e139]:
+                    - listitem [ref=e140]:
+                      - img [ref=e142]
+                      - generic [ref=e144]:
+                        - generic [ref=e145]:
+                          - text: Asignar roles
+                          - code [ref=e146]: users.assign-roles
+                        - generic [ref=e147]: Cambiar los roles asignados a un usuario
+                    - listitem [ref=e148]:
+                      - img [ref=e150]
+                      - generic [ref=e152]:
+                        - generic [ref=e153]:
+                          - text: Gestionar grupos
+                          - code [ref=e154]: groups.write
+                        - generic [ref=e155]: Crear, editar y eliminar grupos
+                    - listitem [ref=e156]:
+                      - img [ref=e158]
+                      - generic [ref=e160]:
+                        - generic [ref=e161]:
+                          - text: Gestionar usuarios
+                          - code [ref=e162]: users.write
+                        - generic [ref=e163]: Crear, editar y eliminar usuarios
+                    - listitem [ref=e164]:
+                      - img [ref=e166]
+                      - generic [ref=e168]:
+                        - generic [ref=e169]:
+                          - text: Ver grupos
+                          - code [ref=e170]: groups.read
+                        - generic [ref=e171]: Listar y consultar grupos
+                    - listitem [ref=e172]:
+                      - img [ref=e174]
+                      - generic [ref=e176]:
+                        - generic [ref=e177]:
+                          - text: Ver usuarios
+                          - code [ref=e178]: users.read
+                        - generic [ref=e179]: Listar y consultar usuarios del sistema
+                - generic [ref=e180]:
+                  - button "Seguridad 2/3" [disabled] [ref=e182]:
+                    - img [ref=e185]
+                    - generic [ref=e187]: Seguridad
+                    - generic [ref=e188]: 2/3
+                  - list [ref=e189]:
+                    - listitem [ref=e190]:
+                      - generic [ref=e192]:
+                        - generic [ref=e193]:
+                          - text: Gestionar roles
+                          - code [ref=e194]: roles.write
+                        - generic [ref=e195]: Crear, editar y eliminar roles personalizados
+                    - listitem [ref=e196]:
+                      - img [ref=e198]
+                      - generic [ref=e200]:
+                        - generic [ref=e201]:
+                          - text: Ver auditoría
+                          - code [ref=e202]: audit.read
+                        - generic [ref=e203]: Acceder al registro de auditoría del sistema
+                    - listitem [ref=e204]:
+                      - img [ref=e206]
+                      - generic [ref=e208]:
+                        - generic [ref=e209]:
+                          - text: Ver roles
+                          - code [ref=e210]: roles.read
+                        - generic [ref=e211]: Consultar roles y permisos
+                - generic [ref=e212]:
+                  - button "Configuración 0/1" [disabled] [ref=e214]:
+                    - img [ref=e216]
+                    - generic [ref=e219]: Configuración
+                    - generic [ref=e220]: 0/1
+                  - list [ref=e221]:
+                    - listitem [ref=e222]:
+                      - generic [ref=e224]:
+                        - generic [ref=e225]:
+                          - text: Configurar sistema
+                          - code [ref=e226]: settings.write
+                        - generic [ref=e227]: Cambiar la configuración global del sistema
+                - generic [ref=e228]:
+                  - button "Incidentes 4/5" [disabled] [ref=e230]:
+                    - img [ref=e233]
+                    - generic [ref=e235]: Incidentes
+                    - generic [ref=e236]: 4/5
+                  - list [ref=e237]:
+                    - listitem [ref=e238]:
+                      - generic [ref=e240]:
+                        - generic [ref=e241]:
+                          - text: Eliminar incidentes
+                          - code [ref=e242]: incidents.delete
+                        - generic [ref=e243]: Eliminar incidentes (solo casos excepcionales)
+                    - listitem [ref=e244]:
+                      - img [ref=e246]
+                      - generic [ref=e248]:
+                        - generic [ref=e249]:
+                          - text: Gestionar incidentes
+                          - code [ref=e250]: incidents.write
+                        - generic [ref=e251]: Asignar, comentar y cambiar estado de incidentes
+                    - listitem [ref=e252]:
+                      - img [ref=e254]
+                      - generic [ref=e256]:
+                        - generic [ref=e257]:
+                          - text: Reportar incidentes
+                          - code [ref=e258]: incidents.create
+                        - generic [ref=e259]: Crear un nuevo reporte de incidente
+                    - listitem [ref=e260]:
+                      - img [ref=e262]
+                      - generic [ref=e264]:
+                        - generic [ref=e265]:
+                          - text: Ver mis incidentes
+                          - code [ref=e266]: incidents.read:own
+                        - generic [ref=e267]: Consultar solo los incidentes que el usuario reportó
+                    - listitem [ref=e268]:
+                      - img [ref=e270]
+                      - generic [ref=e272]:
+                        - generic [ref=e273]:
+                          - text: Ver todos los incidentes
+                          - code [ref=e274]: incidents.read
+                        - generic [ref=e275]: Consultar la bandeja de incidentes (admin)
+          - generic [ref=e314]:
+            - generic [ref=e315]:
+              - generic [ref=e316]:
+                - heading "Crear rol personalizado" [level=2] [ref=e317]
+                - paragraph [ref=e318]: Define un rol con permisos específicos para tu organización.
+              - button "Cerrar" [ref=e319] [cursor=pointer]:
+                - img [ref=e320]
+            - generic [ref=e322]:
+              - generic [ref=e323]:
+                - generic [ref=e324]:
+                  - generic [ref=e325]: Nombre del rol*
+                  - textbox "Nombre del rol*" [active] [ref=e326]:
+                    - /placeholder: p. ej. Coordinador de accesibilidad
+                - generic [ref=e327]:
+                  - generic [ref=e328]: Identificador*
+                  - textbox "Identificador*" [ref=e329]:
+                    - /placeholder: coordinador-accesibilidad
+              - generic [ref=e330]:
+                - generic [ref=e331]: Descripción (opcional)
+                - textbox "Descripción (opcional)" [ref=e332]:
+                  - /placeholder: Para qué se usa este rol, qué áreas cubre…
+              - generic [ref=e333]:
+                - generic [ref=e334]:
+                  - generic [ref=e335]: Permisos asignados
+                  - generic [ref=e336]: 0 de 14 seleccionados
+                - button "Limpiar" [disabled] [ref=e337] [cursor=pointer]
+              - generic [ref=e338]:
+                - generic [ref=e339]:
+                  - button "Directorio 0/5" [ref=e341] [cursor=pointer]:
+                    - img [ref=e343]
+                    - generic [ref=e348]: Directorio
+                    - generic [ref=e349]: 0/5
+                  - list [ref=e350]:
+                    - listitem [ref=e351] [cursor=pointer]:
+                      - generic [ref=e353]:
+                        - generic [ref=e354]:
+                          - text: Asignar roles
+                          - code [ref=e355]: users.assign-roles
+                        - generic [ref=e356]: Cambiar los roles asignados a un usuario
+                    - listitem [ref=e357] [cursor=pointer]:
+                      - generic [ref=e359]:
+                        - generic [ref=e360]:
+                          - text: Gestionar grupos
+                          - code [ref=e361]: groups.write
+                        - generic [ref=e362]: Crear, editar y eliminar grupos
+                    - listitem [ref=e363] [cursor=pointer]:
+                      - generic [ref=e365]:
+                        - generic [ref=e366]:
+                          - text: Gestionar usuarios
+                          - code [ref=e367]: users.write
+                        - generic [ref=e368]: Crear, editar y eliminar usuarios
+                    - listitem [ref=e369] [cursor=pointer]:
+                      - generic [ref=e371]:
+                        - generic [ref=e372]:
+                          - text: Ver grupos
+                          - code [ref=e373]: groups.read
+                        - generic [ref=e374]: Listar y consultar grupos
+                    - listitem [ref=e375] [cursor=pointer]:
+                      - generic [ref=e377]:
+                        - generic [ref=e378]:
+                          - text: Ver usuarios
+                          - code [ref=e379]: users.read
+                        - generic [ref=e380]: Listar y consultar usuarios del sistema
+                - generic [ref=e381]:
+                  - button "Seguridad 0/3" [ref=e383] [cursor=pointer]:
+                    - img [ref=e385]
+                    - generic [ref=e387]: Seguridad
+                    - generic [ref=e388]: 0/3
+                  - list [ref=e389]:
+                    - listitem [ref=e390] [cursor=pointer]:
+                      - generic [ref=e392]:
+                        - generic [ref=e393]:
+                          - text: Gestionar roles
+                          - code [ref=e394]: roles.write
+                        - generic [ref=e395]: Crear, editar y eliminar roles personalizados
+                    - listitem [ref=e396] [cursor=pointer]:
+                      - generic [ref=e398]:
+                        - generic [ref=e399]:
+                          - text: Ver auditoría
+                          - code [ref=e400]: audit.read
+                        - generic [ref=e401]: Acceder al registro de auditoría del sistema
+                    - listitem [ref=e402] [cursor=pointer]:
+                      - generic [ref=e404]:
+                        - generic [ref=e405]:
+                          - text: Ver roles
+                          - code [ref=e406]: roles.read
+                        - generic [ref=e407]: Consultar roles y permisos
+                - generic [ref=e408]:
+                  - button "Configuración 0/1" [ref=e410] [cursor=pointer]:
+                    - img [ref=e412]
+                    - generic [ref=e415]: Configuración
+                    - generic [ref=e416]: 0/1
+                  - list [ref=e417]:
+                    - listitem [ref=e418] [cursor=pointer]:
+                      - generic [ref=e420]:
+                        - generic [ref=e421]:
+                          - text: Configurar sistema
+                          - code [ref=e422]: settings.write
+                        - generic [ref=e423]: Cambiar la configuración global del sistema
+                - generic [ref=e424]:
+                  - button "Incidentes 0/5" [ref=e426] [cursor=pointer]:
+                    - img [ref=e428]
+                    - generic [ref=e430]: Incidentes
+                    - generic [ref=e431]: 0/5
+                  - list [ref=e432]:
+                    - listitem [ref=e433] [cursor=pointer]:
+                      - generic [ref=e435]:
+                        - generic [ref=e436]:
+                          - text: Eliminar incidentes
+                          - code [ref=e437]: incidents.delete
+                        - generic [ref=e438]: Eliminar incidentes (solo casos excepcionales)
+                    - listitem [ref=e439] [cursor=pointer]:
+                      - generic [ref=e441]:
+                        - generic [ref=e442]:
+                          - text: Gestionar incidentes
+                          - code [ref=e443]: incidents.write
+                        - generic [ref=e444]: Asignar, comentar y cambiar estado de incidentes
+                    - listitem [ref=e445] [cursor=pointer]:
+                      - generic [ref=e447]:
+                        - generic [ref=e448]:
+                          - text: Reportar incidentes
+                          - code [ref=e449]: incidents.create
+                        - generic [ref=e450]: Crear un nuevo reporte de incidente
+                    - listitem [ref=e451] [cursor=pointer]:
+                      - generic [ref=e453]:
+                        - generic [ref=e454]:
+                          - text: Ver mis incidentes
+                          - code [ref=e455]: incidents.read:own
+                        - generic [ref=e456]: Consultar solo los incidentes que el usuario reportó
+                    - listitem [ref=e457] [cursor=pointer]:
+                      - generic [ref=e459]:
+                        - generic [ref=e460]:
+                          - text: Ver todos los incidentes
+                          - code [ref=e461]: incidents.read
+                        - generic [ref=e462]: Consultar la bandeja de incidentes (admin)
+            - generic [ref=e463]:
+              - button "Cancelar" [ref=e464] [cursor=pointer]
+              - button "Crear rol" [disabled] [ref=e465]
+    - contentinfo [ref=e276]:
+      - generic [ref=e277]: © 2026 UNAMAD · Oficina de Tecnologías de la Información
+      - link "Términos del Servicio" [ref=e278] [cursor=pointer]:
+        - /url: "#"
+      - generic [ref=e279]: ·
+      - link "Política de Privacidad" [ref=e280] [cursor=pointer]:
+        - /url: "#"
+      - button "Enviar comentarios" [ref=e281] [cursor=pointer]:
+        - img [ref=e282]
+        - text: Enviar comentarios
+  - button "Open Next.js Dev Tools" [ref=e289] [cursor=pointer]:
+    - img [ref=e290]
+  - alert [ref=e312]

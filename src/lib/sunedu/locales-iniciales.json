@@ -1,0 +1,20 @@
+[
+  {
+    "code": "SL01",
+    "sedeFilial": "S",
+    "departamento": "Madre de Dios",
+    "provincia": "Tambopata",
+    "distrito": "Tambopata",
+    "direccion": "AVENIDA JORGE CHÁVEZ N° 1160",
+    "tipoAutorizacion": "Autorizado por Lic."
+  },
+  {
+    "code": "SL02",
+    "sedeFilial": "S",
+    "departamento": "Madre de Dios",
+    "provincia": "Tambopata",
+    "distrito": "Las Piedras",
+    "direccion": "CARRETERA PUERTO MALDONADO - IÑAPARI KM. 16.5",
+    "tipoAutorizacion": "Autorizado por Lic."
+  }
+]

@@ -1,0 +1,120 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e4]:
+        - button "Menú" [ref=e5] [cursor=pointer]:
+          - img [ref=e6]
+        - img [ref=e9]
+      - generic [ref=e13]:
+        - img [ref=e14]
+        - textbox "Buscar usuarios, grupos, ajustes o dispositivos" [ref=e17]
+      - generic [ref=e18]:
+        - button "Notificaciones" [ref=e20] [cursor=pointer]:
+          - img [ref=e21]
+          - generic [ref=e24]: "3"
+        - button "Cuenta" [ref=e26] [cursor=pointer]: AM
+    - main [ref=e28]:
+      - generic [ref=e29]:
+        - button "Roles administrativos" [ref=e31] [cursor=pointer]
+        - heading "Roles administrativos" [level=1] [ref=e34]
+        - generic [ref=e35]:
+          - generic [ref=e36]:
+            - generic [ref=e37]:
+              - generic [ref=e38]: Roles
+              - generic [ref=e39]: "4"
+            - button "Administrador Sistema 2 usuarios · 7 permisos" [ref=e40] [cursor=pointer]:
+              - generic [ref=e41]:
+                - generic [ref=e42]:
+                  - text: Administrador
+                  - generic [ref=e43]: Sistema
+                - generic [ref=e44]: 2 usuarios · 7 permisos
+            - button "Consulta Sistema 4 usuarios · 3 permisos" [ref=e45] [cursor=pointer]:
+              - generic [ref=e46]:
+                - generic [ref=e47]:
+                  - text: Consulta
+                  - generic [ref=e48]: Sistema
+                - generic [ref=e49]: 4 usuarios · 3 permisos
+            - button "Editor Sistema 3 usuarios · 3 permisos" [ref=e50] [cursor=pointer]:
+              - generic [ref=e51]:
+                - generic [ref=e52]:
+                  - text: Editor
+                  - generic [ref=e53]: Sistema
+                - generic [ref=e54]: 3 usuarios · 3 permisos
+            - button "Superadministrador Sistema 1 usuario · 9 permisos" [ref=e55] [cursor=pointer]:
+              - generic [ref=e56]:
+                - generic [ref=e57]:
+                  - text: Superadministrador
+                  - generic [ref=e58]: Sistema
+                - generic [ref=e59]: 1 usuario · 9 permisos
+          - generic [ref=e60]:
+            - generic [ref=e61]:
+              - generic [ref=e62]:
+                - heading "Administrador Sistema" [level=2] [ref=e63]:
+                  - text: Administrador
+                  - generic [ref=e64]: Sistema
+                - paragraph [ref=e65]: Gestiona usuarios, grupos y consulta auditoría.
+              - generic [ref=e66]:
+                - button "Editar" [disabled] [ref=e67] [cursor=pointer]
+                - button "Asignar permisos" [disabled] [ref=e68]
+            - generic [ref=e69]:
+              - generic [ref=e70]:
+                - term [ref=e71]: Identificador
+                - definition [ref=e72]:
+                  - code [ref=e73]: admin
+              - generic [ref=e74]:
+                - term [ref=e75]: Usuarios
+                - definition [ref=e76]: "2"
+              - generic [ref=e77]:
+                - term [ref=e78]: Permisos
+                - definition [ref=e79]: "7"
+            - heading "Permisos otorgados" [level=3] [ref=e80]
+            - generic [ref=e81]:
+              - heading "Directorio · 5" [level=4] [ref=e82]:
+                - text: Directorio
+                - generic [ref=e83]: · 5
+              - list [ref=e84]:
+                - listitem [ref=e85]:
+                  - img [ref=e86]
+                  - generic [ref=e88]: Ver usuarios
+                  - code [ref=e89]: users.read
+                - listitem [ref=e90]:
+                  - img [ref=e91]
+                  - generic [ref=e93]: Gestionar usuarios
+                  - code [ref=e94]: users.write
+                - listitem [ref=e95]:
+                  - img [ref=e96]
+                  - generic [ref=e98]: Asignar roles
+                  - code [ref=e99]: users.assign-roles
+                - listitem [ref=e100]:
+                  - img [ref=e101]
+                  - generic [ref=e103]: Ver grupos
+                  - code [ref=e104]: groups.read
+                - listitem [ref=e105]:
+                  - img [ref=e106]
+                  - generic [ref=e108]: Gestionar grupos
+                  - code [ref=e109]: groups.write
+            - generic [ref=e110]:
+              - heading "Seguridad · 2" [level=4] [ref=e111]:
+                - text: Seguridad
+                - generic [ref=e112]: · 2
+              - list [ref=e113]:
+                - listitem [ref=e114]:
+                  - img [ref=e115]
+                  - generic [ref=e117]: Ver roles
+                  - code [ref=e118]: roles.read
+                - listitem [ref=e119]:
+                  - img [ref=e120]
+                  - generic [ref=e122]: Ver auditoría
+                  - code [ref=e123]: audit.read
+    - contentinfo [ref=e124]:
+      - generic [ref=e125]: © 2026 UNAMAD · Oficina de Tecnologías de la Información
+      - link "Términos del Servicio" [ref=e126] [cursor=pointer]:
+        - /url: "#"
+      - generic [ref=e127]: ·
+      - link "Política de Privacidad" [ref=e128] [cursor=pointer]:
+        - /url: "#"
+      - button "Enviar comentarios" [ref=e129] [cursor=pointer]:
+        - img [ref=e130]
+        - text: Enviar comentarios
+  - button "Open Next.js Dev Tools" [ref=e137] [cursor=pointer]:
+    - img [ref=e138]

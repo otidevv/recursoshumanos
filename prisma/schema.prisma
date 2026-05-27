@@ -1,0 +1,350 @@
+// Conadis admin · Prisma schema
+// Postgres + RBAC (User ↔ Role ↔ Permission) + sessions
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           String     @id @default(cuid())
+  email        String     @unique
+  name         String
+  passwordHash String
+  active       Boolean    @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  roles    UserRole[]
+  sessions Session[]
+
+  reportedIncidents Incident[]         @relation("IncidentReporter")
+  assignedIncidents Incident[]         @relation("IncidentAssignee")
+  comments          IncidentComment[]
+  attachments       IncidentAttachment[]
+  statusChanges     IncidentStatusLog[]
+
+  createdStaff      AdministrativeStaff[] @relation("StaffCreatedBy")
+
+  @@index([active])
+}
+
+model Role {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  name        String
+  description String?
+  system      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users       UserRole[]
+  permissions RolePermission[]
+}
+
+model Permission {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  name        String
+  description String?
+  category    String
+
+  roles RolePermission[]
+
+  @@index([category])
+}
+
+model UserRole {
+  userId     String
+  roleId     String
+  assignedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+  @@index([roleId])
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@index([permissionId])
+}
+
+model Session {
+  id         String      @id @default(cuid())
+  userId     String
+  token      String      @unique
+  expiresAt  DateTime
+  createdAt  DateTime    @default(now())
+  userAgent  String?
+  ip         String?
+  clientType ClientType  @default(web)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+enum ClientType {
+  web
+  mobile
+}
+
+// ─────────────────────────── Incident reporting ───────────────────────────
+
+enum IncidentStatus {
+  open
+  triaged
+  in_progress
+  resolved
+  rejected
+  closed
+}
+
+enum IncidentSeverity {
+  low
+  medium
+  high
+  critical
+}
+
+model IncidentCategory {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  name        String
+  description String?
+  icon        String?
+  order       Int      @default(0)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  incidents Incident[]
+}
+
+model Incident {
+  id            String           @id @default(cuid())
+  code          String           @unique // public tracking code, e.g. INC-2026-000123
+  title         String
+  description   String
+  status        IncidentStatus   @default(open)
+  severity      IncidentSeverity @default(medium)
+  categoryId    String
+
+  // Optional geo. If supplied, both must be present (validated app-side).
+  lat           Float?
+  lng           Float?
+  locationText  String?
+
+  reporterId    String?  // nullable to allow soft-deletion of reporter
+  assignedToId  String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  resolvedAt    DateTime?
+
+  category    IncidentCategory     @relation(fields: [categoryId], references: [id])
+  reporter    User?                @relation("IncidentReporter", fields: [reporterId], references: [id], onDelete: SetNull)
+  assignedTo  User?                @relation("IncidentAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+  attachments IncidentAttachment[]
+  comments    IncidentComment[]
+  statusLog   IncidentStatusLog[]
+
+  @@index([reporterId])
+  @@index([assignedToId])
+  @@index([status])
+  @@index([categoryId])
+  @@index([createdAt])
+}
+
+model IncidentAttachment {
+  id          String   @id @default(cuid())
+  incidentId  String
+  url         String
+  mimeType    String
+  sizeBytes   Int?
+  uploadedById String?
+  createdAt   DateTime @default(now())
+
+  incident   Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  uploadedBy User?    @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
+
+  @@index([incidentId])
+}
+
+model IncidentComment {
+  id         String   @id @default(cuid())
+  incidentId String
+  authorId   String?
+  body       String
+  internal   Boolean  @default(false) // true = visible only to admins
+  createdAt  DateTime @default(now())
+
+  incident Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  author   User?    @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@index([incidentId])
+}
+
+model IncidentStatusLog {
+  id         String         @id @default(cuid())
+  incidentId String
+  fromStatus IncidentStatus
+  toStatus   IncidentStatus
+  byUserId   String?
+  note       String?
+  createdAt  DateTime       @default(now())
+
+  incident Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  byUser   User?    @relation(fields: [byUserId], references: [id], onDelete: SetNull)
+
+  @@index([incidentId])
+}
+
+// ─────────────────────────── SUNEDU SIU · Personal administrativo ───────────────────────────
+//
+// Modela el formato oficial de carga masiva de SUNEDU (siu.sunedu.gob.pe/personal).
+// Los códigos numéricos (cargoCode, sexoCode, etc.) son valores SUNEDU; sus etiquetas
+// viven en src/lib/sunedu/catalogs/* (constantes TS). PAÍS y UBIGEO se resuelven contra
+// los JSON de src/lib/sunedu/.
+
+model AdministrativeStaff {
+  id String @id @default(cuid())
+
+  // INFORMACIÓN GENERAL (encaja con SUNEDU SIU)
+  cargoCode             Int
+  dependenciaCode       Int
+  fechaIngresoIE        DateTime
+  tipoDocumentoCode     Int
+  numeroDocumento       String
+  nombres               String
+  primerApellido        String
+  segundoApellido       String?
+  apellidoCasada        String?
+  unSoloApellido        Boolean
+  condicionDiscapacidad Boolean
+  tipoDiscapacidadCode  Int?
+  sexoCode              Int
+  fechaNacimiento       DateTime
+  paisNacimientoCode    String
+  ubigeoNacimiento      String?
+  ubigeoDomicilio       String
+  correoInstitucional   String?
+  correoPersonal        String?
+  telefono              String?
+  celular               String?
+
+  // Metadata UNAMAD (NO va al export SUNEDU, sirve para gestión interna)
+  gradoMaximo     String?
+  grupoCarrera    String?
+  carreraEgresado String?
+  puestoDetallado String?
+  plazaOrigen     String?
+  plazaActual     String?
+
+  // Estado del trabajador en la institución. Reemplaza el boolean `active`
+  // anterior para reflejar los 4 estados que UNAMAD maneja en sus listas.
+  status    StaffStatus @default(ACTIVO)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime @updatedAt
+
+  createdById String?
+  createdBy   User?   @relation("StaffCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  vinculos   StaffEmploymentLink[]
+  workplaces StaffWorkplace[]
+
+  @@unique([tipoDocumentoCode, numeroDocumento])
+  @@index([status])
+  @@index([cargoCode])
+  @@index([dependenciaCode])
+  @@index([primerApellido])
+}
+
+enum StaffStatus {
+  ACTIVO
+  PASIVO
+  LICENCIA
+  FALLECIMIENTO
+}
+
+model StaffEmploymentLink {
+  id      String @id @default(cuid())
+  staffId String
+  staff   AdministrativeStaff @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  regimenLaboralCode Int
+  vinculoActualCode  Int
+  fechaInicio        DateTime
+  fechaTermino       DateTime?
+
+  // Año del concurso CAS al que pertenece el vínculo (típicamente
+  // fechaInicio.getFullYear() pero explícito para queries rápidas y para
+  // distinguir el contrato 2024 vs 2025 vs 2026 del mismo trabajador).
+  // Las adendas comparten el `year` del contrato padre.
+  year Int?
+
+  // Discriminador interno UNAMAD:
+  //   "DETERMINADO"   → /personal/cas
+  //   "INDETERMINADO" → /personal/indeterminados
+  //   "CONFIANZA"     → /personal/indeterminados (cargo de confianza)
+  condicionContrato StaffContractCondition?
+  esAdenda          Boolean                 @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@index([staffId])
+  @@index([vinculoActualCode])
+  @@index([condicionContrato])
+  @@index([year])
+}
+
+enum StaffContractCondition {
+  DETERMINADO
+  INDETERMINADO
+  CONFIANZA
+}
+
+model StaffWorkplace {
+  id      String @id @default(cuid())
+  staffId String
+  staff   AdministrativeStaff @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  otroLocal   Boolean
+  localId     String?
+  local       UniversityLocal? @relation(fields: [localId], references: [id], onDelete: SetNull)
+  ubigeoLocal String?
+  direccion   String?
+  createdAt   DateTime @default(now())
+
+  @@index([staffId])
+  @@index([localId])
+}
+
+model UniversityLocal {
+  id               String   @id @default(cuid())
+  code             String   @unique
+  name             String
+  sedeFilial       String
+  ubigeoCode       String
+  direccion        String
+  tipoAutorizacion String?
+  active           Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  workplaces StaffWorkplace[]
+
+  @@index([active])
+}

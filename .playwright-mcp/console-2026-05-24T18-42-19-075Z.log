@@ -1,0 +1,15 @@
+[     342ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "username"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:3000/usuarios?new=1:0
+[     356ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/050~_next_dist_13b.2yx._.js:2477
+[     412ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/050~_next_dist_13b.2yx._.js:2477
+[    7405ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/050~_next_dist_13b.2yx._.js:2477
+[    7469ms] [LOG] [Fast Refresh] done in 169ms @ http://localhost:3000/_next/static/chunks/050~_next_dist_13b.2yx._.js:2477
+[   69407ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/050~_next_dist_13b.2yx._.js:2477
+[   69427ms] [LOG] [Fast Refresh] done in 126ms @ http://localhost:3000/_next/static/chunks/050~_next_dist_13b.2yx._.js:2477
+[   69620ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/050~_next_dist_13b.2yx._.js:2477
+[   69720ms] [LOG] [Fast Refresh] done in 202ms @ http://localhost:3000/_next/static/chunks/050~_next_dist_13b.2yx._.js:2477
+[   69839ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/050~_next_dist_13b.2yx._.js:2477
+[   69972ms] [LOG] [Fast Refresh] done in 236ms @ http://localhost:3000/_next/static/chunks/050~_next_dist_13b.2yx._.js:2477
+[   75737ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/050~_next_dist_13b.2yx._.js:2477
+[   75742ms] [LOG] [Fast Refresh] done in 105ms @ http://localhost:3000/_next/static/chunks/050~_next_dist_13b.2yx._.js:2477
+[   75929ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/050~_next_dist_13b.2yx._.js:2477
+[   76061ms] [LOG] [Fast Refresh] done in 233ms @ http://localhost:3000/_next/static/chunks/050~_next_dist_13b.2yx._.js:2477

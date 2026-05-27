@@ -1,0 +1,232 @@
+[     210ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/050~_next_dist_13b.2yx._.js:2477
+[     224ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/050~_next_dist_13b.2yx._.js:2477
+[     322ms] [ERROR] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+%s%s https://react.dev/link/hydration-mismatch 
+
+  ...
+    <HTTPAccessFallbackBoundary notFound={undefined} forbidden={undefined} unauthorized={undefined}>
+      <RedirectBoundary>
+        <RedirectErrorBoundary router={{...}}>
+          <InnerLayoutRouter url="/usuarios?..." tree={[...]} params={{}} cacheNode={{rsc:{...}, ...}} ...>
+            <SegmentViewNode type="page" pagePath="(admin)/us...">
+              <SegmentTrieNode>
+              <Page>
+                <UsersClient rows={[...]} roles={[...]} perms={{canRead:true, ...}} currentUserId="cmpix4wk30...">
+                  <div className="page">
+                    <div>
+                    <div>
+                    <div>
+                    <div className="tablewrap ...">
+                      <div className="tablewrap_...">
+                        <table className="dtable">
+                          <thead>
+                          <tbody>
+                            <tr className="">
+                              <td>
+                              <td>
+                              <td>
+                              <td>
+                              <td
+                                className="dtable__muted"
++                               title="sáb, 23 de mayo de 2026, 07:08 p. m."
+-                               title="sáb, 23 de mayo de 2026, 07:08 p. m."
+                              >
++                               23 may. 2026
+                              <td
+                                className="dtable__muted"
++                               title="sáb, 23 de mayo de 2026, 07:08 p. m."
+-                               title="sáb, 23 de mayo de 2026, 07:08 p. m."
+                              >
++                               23 may. 2026
+                              ...
+                            <tr className="">
+                              <td>
+                              <td>
+                              <td>
+                              <td>
+                              <td
+                                className="dtable__muted"
++                               title="vie, 23 de enero de 2026, 07:08 p. m."
+-                               title="vie, 23 de enero de 2026, 07:08 p. m."
+                              >
++                               23 ene. 2026
+                              <td
+                                className="dtable__muted"
++                               title="sáb, 23 de mayo de 2026, 07:08 p. m."
+-                               title="sáb, 23 de mayo de 2026, 07:08 p. m."
+                              >
++                               23 may. 2026
+                              ...
+                            <tr className="">
+                              <td>
+                              <td>
+                              <td>
+                              <td>
+                              <td>
+                              <td
+                                className="dtable__muted"
++                               title="sáb, 23 de mayo de 2026, 07:08 p. m."
+-                               title="sáb, 23 de mayo de 2026, 07:08 p. m."
+                              >
++                               23 may. 2026
+                              ...
+                            <tr className="">
+                              <td>
+                              <td>
+                              <td>
+                              <td>
+                              <td
+                                className="dtable__muted"
++                               title="dom, 22 de febrero de 2026, 07:08 p. m."
+-                               title="dom, 22 de febrero de 2026, 07:08 p. m."
+                              >
++                               22 feb. 2026
+                              <td
+                                className="dtable__muted"
++                               title="sáb, 23 de mayo de 2026, 07:08 p. m."
+-                               title="sáb, 23 de mayo de 2026, 07:08 p. m."
+                              >
++                               23 may. 2026
+                              ...
+                            <tr className="">
+                              <td>
+                              <td>
+                              <td>
+                              <td>
+                              <td
+                                className="dtable__muted"
++                               title="sáb, 16 de mayo de 2026, 07:08 p. m."
+-                               title="sáb, 16 de mayo de 2026, 07:08 p. m."
+                              >
++                               16 may. 2026
+                              <td
+                                className="dtable__muted"
++                               title="sáb, 23 de mayo de 2026, 07:08 p. m."
+-                               title="sáb, 23 de mayo de 2026, 07:08 p. m."
+                              >
++                               23 may. 2026
+                              ...
+                            <tr className="">
+                              <td>
+                              <td>
+                              <td>
+                              <td>
+                              <td
+                                className="dtable__muted"
++                               title="lun, 13 de abril de 2026, 07:08 p. m."
+-                               title="lun, 13 de abril de 2026, 07:08 p. m."
+                              >
++                               13 abr. 2026
+                              <td
+                                className="dtable__muted"
++                               title="sáb, 23 de mayo de 2026, 07:08 p. m."
+-                               title="sáb, 23 de mayo de 2026, 07:08 p. m."
+                              >
++                               23 may. 2026
+                              ...
+                            <tr className="">
+                              <td>
+                              <td>
+                              <td>
+                              <td>
+                              <td
+                                className="dtable__muted"
++                               title="lun, 11 de mayo de 2026, 07:08 p. m."
+-                               title="lun, 11 de mayo de 2026, 07:08 p. m."
+                              >
++                               11 may. 2026
+                              <td
+                                className="dtable__muted"
++                               title="sáb, 23 de mayo de 2026, 07:08 p. m."
+-                               title="sáb, 23 de mayo de 2026, 07:08 p. m."
+                              >
++                               23 may. 2026
+                              ...
+                            <tr className="">
+                              <td>
+                              <td>
+                              <td>
+                              <td>
+                              <td
+                                className="dtable__muted"
++                               title="mié, 20 de mayo de 2026, 07:08 p. m."
+-                               title="mié, 20 de mayo de 2026, 07:08 p. m."
+                              >
++                               20 may. 2026
+                              <td
+                                className="dtable__muted"
++                               title="sáb, 23 de mayo de 2026, 07:08 p. m."
+-                               title="sáb, 23 de mayo de 2026, 07:08 p. m."
+                              >
++                               23 may. 2026
+                              ...
+                            <tr className="">
+                              <td>
+                              <td>
+                              <td>
+                              <td>
+                              <td
+                                className="dtable__muted"
++                               title="vie, 22 de mayo de 2026, 07:08 p. m."
+-                               title="vie, 22 de mayo de 2026, 07:08 p. m."
+                              >
++                               22 may. 2026
+                              <td
+                                className="dtable__muted"
++                               title="sáb, 23 de mayo de 2026, 07:08 p. m."
+-                               title="sáb, 23 de mayo de 2026, 07:08 p. m."
+                              >
++                               23 may. 2026
+                              ...
+                            <tr className="">
+                              <td>
+                              <td>
+                              <td>
+                              <td>
+                              <td
+                                className="dtable__muted"
++                               title="sáb, 23 de mayo de 2026, 07:08 p. m."
+-                               title="sáb, 23 de mayo de 2026, 07:08 p. m."
+                              >
++                               23 may. 2026
+                              <td
+                                className="dtable__muted"
++                               title="sáb, 23 de mayo de 2026, 07:08 p. m."
+-                               title="sáb, 23 de mayo de 2026, 07:08 p. m."
+                              >
++                               23 may. 2026
+                              ...
+                            <tr className="">
+                              <td>
+                              <td>
+                              <td>
+                              <td>
+                              <td
+                                className="dtable__muted"
++                               title="dom, 24 de mayo de 2026, 08:47 a. m."
+-                               title="dom, 24 de mayo de 2026, 08:47 a. m."
+                              >
++                               24 may. 2026
+                              <td
+                                className="dtable__muted"
++                               title="sáb, 23 de mayo de 2026, 05:26 p. m."
+-                               title="sáb, 23 de mayo de 2026, 05:26 p. m."
+                              >
++                               23 may. 2026
+                              ...
+                      ...
+                    ...
+            ...
+          ...
+ @ http://localhost:3000/_next/static/chunks/050~_next_dist_13b.2yx._.js:3318
+[   57003ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/050~_next_dist_13b.2yx._.js:2477
+[   57060ms] [LOG] [Fast Refresh] done in 114ms @ http://localhost:3000/_next/static/chunks/050~_next_dist_13b.2yx._.js:2477
