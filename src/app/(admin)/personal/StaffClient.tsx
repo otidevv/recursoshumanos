@@ -9,7 +9,7 @@ import {
   useTransition,
   type FormEvent,
 } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { Icon } from "@/components/admin/Icon";
 import {
@@ -38,12 +38,15 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import {
+  AlertTriangle,
   Check,
   ChevronLeft,
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
   ChevronsUpDown,
+  GraduationCap,
+  Info,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -178,11 +181,35 @@ function buildEmptyForm(variant: StaffVariant): StaffInput {
 
 export function StaffClient({ rows, localOptions, perms, variant }: Props) {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
   const [query, setQuery] = useState("");
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<StaffRow | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<StaffRow | null>(null);
+
+  // Auto-abre el modal de edición cuando llegamos con ?openId=ID en la URL.
+  // Lo usa el módulo de Calidad de Datos para enviar al user directo a editar
+  // un trabajador específico. Si el ID no está en `rows` (porque está en otra
+  // condición de contrato), avisamos con un toast.
+  useEffect(() => {
+    const openId = searchParams.get("openId");
+    if (!openId) return;
+    const target = rows.find((r) => r.id === openId);
+    if (target) {
+      setEditing(target);
+    } else {
+      toast.warning(
+        "El trabajador solicitado no está en esta lista. Probablemente esté en otra variante (CAS / Indeterminados).",
+      );
+    }
+    // Limpia el openId del URL para no re-abrir el modal en próximas navigaciones.
+    const next = new URLSearchParams(searchParams.toString());
+    next.delete("openId");
+    const qs = next.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  }, [searchParams, rows, router, pathname]);
 
   const cfg = VARIANT_CONFIG[variant];
   const emptyForm = useMemo(() => buildEmptyForm(variant), [variant]);
@@ -839,6 +866,7 @@ function StaffFormModal({
   >({});
 
   const [dniStatus, setDniStatus] = useState<DniStatus>({ kind: "idle" });
+  const [daaStatus, setDaaStatus] = useState<DaaStatus>({ kind: "idle" });
   const lastLookupRef = useRef<string>("");
 
   const set = <K extends keyof StaffInput>(k: K, v: StaffInput[K]) =>
@@ -859,11 +887,13 @@ function StaffFormModal({
     if (mode !== "create") return;
     if (form.tipoDocumentoCode !== 1) {
       setDniStatus({ kind: "idle" });
+      setDaaStatus({ kind: "idle" });
       return;
     }
     const dni = form.numeroDocumento.trim();
     if (!/^\d{8}$/.test(dni)) {
       setDniStatus({ kind: "idle" });
+      setDaaStatus({ kind: "idle" });
       return;
     }
     if (lastLookupRef.current === dni) return;
@@ -871,65 +901,118 @@ function StaffFormModal({
     const ctrl = new AbortController();
     const timer = setTimeout(async () => {
       setDniStatus({ kind: "loading" });
-      try {
-        const res = await fetch(`/api/dni/${dni}`, { signal: ctrl.signal });
-        const body = (await res.json()) as
-          | {
-              ok: true;
-              data: {
-                nombres: string;
-                primerApellido: string;
-                segundoApellido: string;
-                fechaNacimiento: string | null;
-                sexoCode: 1 | 2 | null;
-                ubigeoNacimiento: string | null;
-              };
-            }
-          | { ok: false; error: string };
-        if (ctrl.signal.aborted) return;
-        if (body.ok) {
-          // Solo cacheamos DNIs exitosos. Fallos NO se cachean → si el usuario
-          // re-tipea el mismo DNI (ej. después de un timeout transitorio),
-          // se reintenta la consulta.
-          lastLookupRef.current = dni;
-          const d = body.data;
-          // No pisar campos que el usuario YA tipeó manualmente — RENIEC solo
-          // rellena lo que está vacío + lo que el usuario claramente no tocó.
-          setForm((f) => ({
-            ...f,
-            nombres: f.nombres.trim() ? f.nombres : d.nombres,
-            primerApellido: f.primerApellido.trim()
-              ? f.primerApellido
-              : d.primerApellido,
-            segundoApellido: f.segundoApellido.trim()
-              ? f.segundoApellido
-              : d.segundoApellido,
-            unSoloApellido:
-              d.segundoApellido && !f.segundoApellido.trim()
-                ? false
-                : f.unSoloApellido,
-            fechaNacimiento: f.fechaNacimiento || (d.fechaNacimiento ?? ""),
-            sexoCode: f.sexoCode || (d.sexoCode ?? 1),
-            ubigeoNacimiento:
-              f.ubigeoNacimiento || (d.ubigeoNacimiento ?? ""),
-          }));
-          setDniStatus({
-            kind: "ok",
-            fullName: [d.primerApellido, d.segundoApellido, d.nombres]
-              .filter(Boolean)
-              .join(" "),
-            partial: !d.ubigeoNacimiento,
-          });
-        } else {
-          setDniStatus({ kind: "fail", message: body.error });
-        }
-      } catch (e) {
-        if (!ctrl.signal.aborted) {
-          setDniStatus({
-            kind: "fail",
-            message: e instanceof Error ? e.message : "Error de red.",
-          });
-        }
+      setDaaStatus({ kind: "loading" });
+
+      // RENIEC + DAA en paralelo — no se bloquean entre sí. DAA solo aporta
+      // carrera/facultad, así que su fallo no debe estropear el lookup de
+      // nombres/fecha/sexo de RENIEC.
+      const [reniecResult, daaResult] = await Promise.allSettled([
+        fetch(`/api/dni/${dni}`, { signal: ctrl.signal }).then((r) => r.json()),
+        fetch(`/api/daa/${dni}`, { signal: ctrl.signal }).then((r) => r.json()),
+      ]);
+      if (ctrl.signal.aborted) return;
+
+      // ── RENIEC ─────────────────────────────────────────────────────
+      const reniecBody =
+        reniecResult.status === "fulfilled"
+          ? (reniecResult.value as
+              | {
+                  ok: true;
+                  data: {
+                    nombres: string;
+                    primerApellido: string;
+                    segundoApellido: string;
+                    fechaNacimiento: string | null;
+                    sexoCode: 1 | 2 | null;
+                    ubigeoNacimiento: string | null;
+                  };
+                }
+              | { ok: false; error: string })
+          : null;
+      if (reniecBody && reniecBody.ok) {
+        // Solo cacheamos DNIs exitosos. Fallos NO se cachean → si el usuario
+        // re-tipea el mismo DNI (ej. después de un timeout transitorio),
+        // se reintenta la consulta.
+        lastLookupRef.current = dni;
+        const d = reniecBody.data;
+        // No pisar campos que el usuario YA tipeó manualmente — RENIEC solo
+        // rellena lo que está vacío + lo que el usuario claramente no tocó.
+        setForm((f) => ({
+          ...f,
+          nombres: f.nombres.trim() ? f.nombres : d.nombres,
+          primerApellido: f.primerApellido.trim()
+            ? f.primerApellido
+            : d.primerApellido,
+          segundoApellido: f.segundoApellido.trim()
+            ? f.segundoApellido
+            : d.segundoApellido,
+          unSoloApellido:
+            d.segundoApellido && !f.segundoApellido.trim()
+              ? false
+              : f.unSoloApellido,
+          fechaNacimiento: f.fechaNacimiento || (d.fechaNacimiento ?? ""),
+          sexoCode: f.sexoCode || (d.sexoCode ?? 1),
+          ubigeoNacimiento:
+            f.ubigeoNacimiento || (d.ubigeoNacimiento ?? ""),
+        }));
+        setDniStatus({
+          kind: "ok",
+          fullName: [d.primerApellido, d.segundoApellido, d.nombres]
+            .filter(Boolean)
+            .join(" "),
+          partial: !d.ubigeoNacimiento,
+        });
+      } else if (reniecBody && !reniecBody.ok) {
+        setDniStatus({ kind: "fail", message: reniecBody.error });
+      } else if (reniecResult.status === "rejected") {
+        const err = reniecResult.reason;
+        setDniStatus({
+          kind: "fail",
+          message: err instanceof Error ? err.message : "Error de red.",
+        });
+      }
+
+      // ── DAA ────────────────────────────────────────────────────────
+      const daaBody =
+        daaResult.status === "fulfilled"
+          ? (daaResult.value as
+              | {
+                  ok: true;
+                  data: {
+                    carrera: string;
+                    facultad: string;
+                    emailInstitucional: string | null;
+                    emailPersonal: string | null;
+                  };
+                }
+              | { ok: false; error: string })
+          : null;
+      if (daaBody && daaBody.ok) {
+        const d = daaBody.data;
+        setForm((f) => ({
+          ...f,
+          // Solo prellenar si está vacío. Carrera del DAA usa formato
+          // "INGENIERÍA DE SISTEMAS E INFORMÁTICA" — exactamente lo que SUNEDU
+          // y el reporte CAS esperan.
+          carreraEgresado: f.carreraEgresado.trim() ? f.carreraEgresado : d.carrera,
+          correoInstitucional:
+            f.correoInstitucional.trim()
+              ? f.correoInstitucional
+              : d.emailInstitucional ?? f.correoInstitucional,
+          correoPersonal:
+            f.correoPersonal.trim()
+              ? f.correoPersonal
+              : d.emailPersonal ?? f.correoPersonal,
+        }));
+        setDaaStatus({
+          kind: "ok",
+          carrera: d.carrera,
+          facultad: d.facultad,
+        });
+      } else if (daaBody && !daaBody.ok) {
+        setDaaStatus({ kind: "fail", message: daaBody.error });
+      } else if (daaResult.status === "rejected") {
+        setDaaStatus({ kind: "fail", message: "DAA no respondió." });
       }
     }, 400);
 
@@ -1005,6 +1088,7 @@ function StaffFormModal({
           </Row>
 
           <DniStatusLine status={dniStatus} />
+          <DaaStatusLine status={daaStatus} />
 
           <FieldText
             label="Nombres *"
@@ -2819,6 +2903,12 @@ type DniStatus =
   | { kind: "ok"; fullName: string; partial: boolean }
   | { kind: "fail"; message: string };
 
+type DaaStatus =
+  | { kind: "idle" }
+  | { kind: "loading" }
+  | { kind: "ok"; carrera: string; facultad: string }
+  | { kind: "fail"; message: string };
+
 function DniStatusLine({ status }: { status: DniStatus }) {
   if (status.kind === "idle") return null;
 
@@ -2876,7 +2966,7 @@ function DniStatusLine({ status }: { status: DniStatus }) {
           color: "#065f46",
         }}
       >
-        <span aria-hidden="true">✓</span>
+        <Check size={14} aria-hidden="true" />
         <span>
           <b>{status.fullName}</b> — datos completados desde RENIEC
           {status.partial && (
@@ -2899,8 +2989,54 @@ function DniStatusLine({ status }: { status: DniStatus }) {
         color: "#92400e",
       }}
     >
-      <span aria-hidden="true">⚠</span>
+      <AlertTriangle size={14} aria-hidden="true" />
       <span>{status.message} Continúa llenando los datos manualmente.</span>
+    </div>
+  );
+}
+
+// ─────────────── DAA (Dirección de Asuntos Académicos) status ───────────────
+
+function DaaStatusLine({ status }: { status: DaaStatus }) {
+  // En "idle" o "loading" no mostramos nada: el spinner de RENIEC ya cubre la
+  // espera. Solo destacamos cuando hay un hit DAA (auto-fill de carrera) o
+  // cuando falló por una razón útil para el usuario (no es egresado UNAMAD).
+  if (status.kind === "idle" || status.kind === "loading") return null;
+
+  const base: React.CSSProperties = {
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
+    padding: "8px 12px",
+    borderRadius: 8,
+    fontSize: 13,
+    marginTop: -4,
+    marginBottom: 12,
+  };
+
+  if (status.kind === "ok") {
+    return (
+      <div style={{ ...base, background: "#dbeafe", color: "#1e3a8a" }}>
+        <GraduationCap size={14} aria-hidden="true" />
+        <span>
+          Egresado UNAMAD detectado — carrera: <b>{status.carrera}</b>
+          {status.facultad && (
+            <>
+              {" "}
+              · Facultad: <b>{status.facultad}</b>
+            </>
+          )}
+        </span>
+      </div>
+    );
+  }
+
+  // status.kind === "fail" — sólo informativo, sin "warning" amarillo: es
+  // normal que personal externo no aparezca en DAA.
+  return (
+    <div style={{ ...base, background: "#f1f5f9", color: "#475569" }}>
+      <Info size={14} aria-hidden="true" />
+      <span>{status.message}</span>
     </div>
   );
 }

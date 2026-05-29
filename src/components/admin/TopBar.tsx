@@ -1,14 +1,9 @@
 "use client";
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import {
-  useEffect,
-  useRef,
-  useState,
-  useTransition,
-  type ChangeEvent,
-} from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import { Icon, type IconName } from "./Icon";
+import { GlobalSearch } from "./GlobalSearch";
 
 type Props = {
   onMenuClick: () => void;
@@ -33,23 +28,11 @@ function initialsFor(name: string): string {
 
 export function TopBar({ onMenuClick, user }: Props) {
   const router = useRouter();
-  const pathname = usePathname();
-  const params = useSearchParams();
-  const [, startTransition] = useTransition();
-
-  const initialQuery = params.get("q") ?? "";
-  const [search, setSearch] = useState(initialQuery);
-  const [focused, setFocused] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [avatarOpen, setAvatarOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
   const avatarRef = useRef<HTMLDivElement>(null);
-
-  // Keep input synced when navigation drops ?q=
-  useEffect(() => {
-    setSearch(params.get("q") ?? "");
-  }, [params]);
 
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
@@ -60,21 +43,6 @@ export function TopBar({ onMenuClick, user }: Props) {
     document.addEventListener("mousedown", onClick);
     return () => document.removeEventListener("mousedown", onClick);
   }, []);
-
-  const updateQuery = (value: string) => {
-    setSearch(value);
-    const next = new URLSearchParams(params.toString());
-    if (value.trim()) next.set("q", value);
-    else next.delete("q");
-    const qs = next.toString();
-    startTransition(() => {
-      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
-    });
-  };
-
-  const onSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
-    updateQuery(e.target.value);
-  };
 
   const onLogout = async () => {
     if (loggingOut) return;
@@ -100,25 +68,11 @@ export function TopBar({ onMenuClick, user }: Props) {
         </div>
       </div>
 
-      <div className={`topbar__search ${focused ? "is-focused" : ""}`}>
-        <Icon name="search" size={20} className="topbar__search-icon" />
-        <input
-          type="text"
-          placeholder="Buscar usuarios, grupos, ajustes o dispositivos"
-          value={search}
-          onChange={onSearchChange}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
-        />
-        {search && (
-          <button
-            className="topbar__search-clear"
-            onClick={() => updateQuery("")}
-            aria-label="Borrar búsqueda"
-          >
-            <Icon name="close" size={16} />
-          </button>
-        )}
+      <div
+        className="topbar__search"
+        style={{ background: "transparent", padding: 0 }}
+      >
+        <GlobalSearch />
       </div>
 
       <div className="topbar__right">

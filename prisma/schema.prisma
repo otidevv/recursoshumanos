@@ -262,14 +262,57 @@ model AdministrativeStaff {
   createdById String?
   createdBy   User?   @relation("StaffCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
 
-  vinculos   StaffEmploymentLink[]
-  workplaces StaffWorkplace[]
+  vinculos     StaffEmploymentLink[]
+  workplaces   StaffWorkplace[]
+  designations StaffDesignation[]
 
   @@unique([tipoDocumentoCode, numeroDocumento])
   @@index([status])
   @@index([cargoCode])
   @@index([dependenciaCode])
   @@index([primerApellido])
+}
+
+// Designaciones de Confianza — Personal directivo nombrado por resolución
+// (Consejo Universitario / Rectorado / etc.). No es un vínculo laboral, sino
+// el cargo de confianza específico asignado por documento oficial.
+//
+// Origen del modelo: hoja "PEDIDO DE PAD" de los xlsx UNAMAD (que en realidad
+// son designaciones, no procesos disciplinarios).
+model StaffDesignation {
+  id String @id @default(cuid())
+
+  // FK opcional al trabajador (puede ser null si el designado aún no está
+  // registrado en AdministrativeStaff).
+  staff   AdministrativeStaff? @relation(fields: [staffId], references: [id], onDelete: SetNull)
+  staffId String?
+
+  // Snapshot al momento de la designación. Mantiene el dato aunque el staffId
+  // se rompa o el trabajador se elimine.
+  dni              String  @db.VarChar(12)
+  nombreCompleto   String  @db.VarChar(200)
+  dependencia      String  @db.VarChar(200)
+  cargoDesempenado String  @db.VarChar(200)
+  correo           String? @db.VarChar(200)
+
+  // Documento oficial de designación, ej. "RESOLUCION DE CONSEJO UNIVERSITARIO
+  // N° 123-2024-UNAMAD".
+  documentoDesignacion String? @db.VarChar(300)
+
+  fechaInicio DateTime
+  fechaCese   DateTime?
+
+  // Cuando fechaCese es null pero el cese tiene una condición textual
+  // ("Hasta que la autoridad designe nuevo titular").
+  notaFinCargo String? @db.VarChar(300)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([staffId])
+  @@index([dni])
+  @@index([fechaInicio])
+  @@index([fechaCese])
 }
 
 enum StaffStatus {

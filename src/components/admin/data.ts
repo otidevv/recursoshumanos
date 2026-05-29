@@ -12,6 +12,7 @@ export type SidebarItem = {
 };
 
 export const SIDEBAR_NAV: SidebarItem[] = [
+  { id: "dashboard", label: "Dashboard", icon: "home", href: "/dashboard" },
   { id: "usuarios", label: "Usuarios", icon: "users", href: "/usuarios" },
   { id: "roles", label: "Roles", icon: "shield", href: "/roles" },
   {
@@ -26,6 +27,16 @@ export const SIDEBAR_NAV: SidebarItem[] = [
         id: "personal-indeterminados",
         label: "Indeterminados · Confianza",
         href: "/personal/indeterminados",
+      },
+      {
+        id: "personal-reportes",
+        label: "Reportes",
+        href: "/personal/reportes",
+      },
+      {
+        id: "personal-designaciones",
+        label: "Designaciones",
+        href: "/personal/designaciones",
       },
     ],
   },
