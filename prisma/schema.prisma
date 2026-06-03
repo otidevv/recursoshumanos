@@ -255,7 +255,15 @@ model AdministrativeStaff {
 
   // Estado del trabajador en la institución. Reemplaza el boolean `active`
   // anterior para reflejar los 4 estados que UNAMAD maneja en sus listas.
-  status    StaffStatus @default(ACTIVO)
+  status StaffStatus @default(ACTIVO)
+
+  // Datos de cese / baja. Se registran cuando `status` pasa a PASIVO o
+  // FALLECIMIENTO (renuncia, fin de contrato, despido, etc.) y se limpian al
+  // reactivar al trabajador (status → ACTIVO). Aplica a los 3 regímenes.
+  fechaCese     DateTime?
+  motivoCese    StaffCeseMotivo?
+  documentoCese String?
+
   createdAt DateTime    @default(now())
   updatedAt DateTime @updatedAt
 
@@ -320,6 +328,17 @@ enum StaffStatus {
   PASIVO
   LICENCIA
   FALLECIMIENTO
+}
+
+// Motivo del cese / baja del trabajador (ver AdministrativeStaff.motivoCese).
+enum StaffCeseMotivo {
+  RENUNCIA
+  FIN_CONTRATO
+  DESTITUCION_DESPIDO
+  JUBILACION
+  ABANDONO
+  FALLECIMIENTO
+  OTRO
 }
 
 model StaffEmploymentLink {

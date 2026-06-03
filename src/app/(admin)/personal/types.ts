@@ -18,6 +18,41 @@ export const STAFF_STATUSES: readonly StaffStatus[] = [
   "FALLECIMIENTO",
 ];
 
+export type StaffCeseMotivo =
+  | "RENUNCIA"
+  | "FIN_CONTRATO"
+  | "DESTITUCION_DESPIDO"
+  | "JUBILACION"
+  | "ABANDONO"
+  | "FALLECIMIENTO"
+  | "OTRO";
+
+export const STAFF_CESE_MOTIVOS: readonly StaffCeseMotivo[] = [
+  "RENUNCIA",
+  "FIN_CONTRATO",
+  "DESTITUCION_DESPIDO",
+  "JUBILACION",
+  "ABANDONO",
+  "FALLECIMIENTO",
+  "OTRO",
+];
+
+export const CESE_MOTIVO_LABELS: Record<StaffCeseMotivo, string> = {
+  RENUNCIA: "Renuncia",
+  FIN_CONTRATO: "Fin de contrato",
+  DESTITUCION_DESPIDO: "Destitución / Despido",
+  JUBILACION: "Jubilación",
+  ABANDONO: "Abandono de cargo",
+  FALLECIMIENTO: "Fallecimiento",
+  OTRO: "Otro",
+};
+
+// Estados que representan una baja → requieren datos de cese (fecha + motivo).
+export const CESE_STATUSES: readonly StaffStatus[] = [
+  "PASIVO",
+  "FALLECIMIENTO",
+];
+
 export type StaffRow = {
   id: string;
   cargoCode: number;
@@ -77,6 +112,10 @@ export type StaffRow = {
   availableYears: number[];
 
   status: StaffStatus;
+  // Datos de cese / baja (null si el trabajador está ACTIVO/LICENCIA).
+  fechaCese: string | null; // ISO
+  motivoCese: StaffCeseMotivo | null;
+  documentoCese: string | null;
   vinculosCount: number;
   workplacesCount: number;
   createdAt: string;
@@ -151,6 +190,12 @@ export type StaffInput = {
 
   // Estado del trabajador (4 valores)
   status: StaffStatus;
+
+  // Datos de cese (solo se usan si status es PASIVO/FALLECIMIENTO; en otros
+  // estados el server los limpia).
+  fechaCese: string; // YYYY-MM-DD o ""
+  motivoCese: StaffCeseMotivo | "";
+  documentoCese: string;
 
   // Initial vínculo (required at creation)
   vinculo: {

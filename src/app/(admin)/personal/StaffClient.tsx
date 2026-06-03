@@ -92,13 +92,19 @@ import type {
   ActionResult,
   LocalOption,
   PermFlags,
+  StaffCeseMotivo,
   StaffCondition,
   StaffInput,
   StaffRow,
   StaffStatus,
   StaffVariant,
 } from "./types";
-import { STAFF_STATUSES } from "./types";
+import {
+  CESE_MOTIVO_LABELS,
+  CESE_STATUSES,
+  STAFF_CESE_MOTIVOS,
+  STAFF_STATUSES,
+} from "./types";
 
 type Props = {
   rows: StaffRow[];
@@ -167,6 +173,9 @@ function buildEmptyForm(variant: StaffVariant): StaffInput {
     plazaOrigen: "",
     plazaActual: "",
     status: "ACTIVO",
+    fechaCese: "",
+    motivoCese: "",
+    documentoCese: "",
     vinculo: {
       regimenLaboralCode: 4, // CAS
       vinculoActualCode: 1,
@@ -214,6 +223,12 @@ export function StaffClient({ rows, localOptions, perms, variant }: Props) {
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<StaffRow | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<StaffRow | null>(null);
+  // Trabajador al que se le está registrando la baja (diálogo de cese rápido).
+  const [ceseTarget, setCeseTarget] = useState<StaffRow | null>(null);
+  // Trabajador a reactivar (confirma porque reactivar borra los datos de cese).
+  const [reactivateTarget, setReactivateTarget] = useState<StaffRow | null>(
+    null,
+  );
 
   // Auto-abre el modal de edición cuando llegamos con ?openId=ID en la URL.
   // Lo usa el módulo de Calidad de Datos para enviar al user directo a editar
@@ -866,17 +881,21 @@ export function StaffClient({ rows, localOptions, perms, variant }: Props) {
             }
             onEdit={(s) => setEditing(s)}
             onToggleActive={async (s) => {
-              // Toggle rápido entre ACTIVO ↔ PASIVO. LICENCIA y FALLECIMIENTO
-              // se setean desde el modal de edición.
-              const next: StaffStatus =
-                s.status === "ACTIVO" ? "PASIVO" : "ACTIVO";
-              const res = await setStaffStatus(s.id, next);
+              // Dar de baja (ACTIVO → PASIVO) exige registrar fecha + motivo de
+              // cese: abrimos el diálogo en vez de cambiar en silencio.
+              if (s.status === "ACTIVO") {
+                setCeseTarget(s);
+                return;
+              }
+              // Reactivar (→ ACTIVO) limpia los datos de cese. Si hay una baja
+              // registrada, confirmamos antes para no perderla en silencio.
+              if (s.fechaCese) {
+                setReactivateTarget(s);
+                return;
+              }
+              const res = await setStaffStatus(s.id, "ACTIVO");
               if (res.ok) {
-                toast.success(
-                  next === "PASIVO"
-                    ? "Trabajador marcado como PASIVO"
-                    : "Trabajador reactivado",
-                );
+                toast.success("Trabajador reactivado");
                 refresh();
               } else {
                 toast.error(res.error);
@@ -928,6 +947,71 @@ export function StaffClient({ rows, localOptions, perms, variant }: Props) {
           }}
         />
       )}
+
+      {ceseTarget && (
+        <CeseDialog
+          row={ceseTarget}
+          onClose={() => setCeseTarget(null)}
+          onDone={() => {
+            setCeseTarget(null);
+            refresh();
+          }}
+        />
+      )}
+
+      <AlertDialog
+        open={!!reactivateTarget}
+        onOpenChange={(open) => !open && setReactivateTarget(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Reactivar a {reactivateTarget?.fullName}
+            </AlertDialogTitle>
+            <AlertDialogDescription style={{ marginTop: 8 }}>
+              El trabajador volverá a <b>ACTIVO</b>. Se <b>borrará la baja
+              registrada</b> (fecha de cese, motivo y documento) y esta acción no
+              se puede deshacer.
+              {reactivateTarget?.motivoCese && (
+                <span
+                  style={{
+                    display: "block",
+                    marginTop: 10,
+                    padding: "8px 10px",
+                    background: "var(--bg-soft)",
+                    borderRadius: 6,
+                    fontSize: 12,
+                    color: "var(--text-muted)",
+                  }}
+                >
+                  Baja actual: <b>{CESE_MOTIVO_LABELS[reactivateTarget.motivoCese]}</b>
+                  {reactivateTarget.fechaCese
+                    ? ` · ${fmtDate(reactivateTarget.fechaCese)}`
+                    : ""}
+                </span>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                if (!reactivateTarget) return;
+                const res = await setStaffStatus(reactivateTarget.id, "ACTIVO");
+                if (res.ok) {
+                  toast.success("Trabajador reactivado");
+                  refresh();
+                } else {
+                  toast.error(res.error);
+                }
+                setReactivateTarget(null);
+              }}
+            >
+              Reactivar y borrar baja
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog
         open={confirmExport}
@@ -1142,11 +1226,128 @@ function rowToInput(row: StaffRow, emptyForm: StaffInput): StaffInput {
     plazaOrigen: row.plazaOrigen ?? "",
     plazaActual: row.plazaActual ?? "",
     status: row.status,
+    fechaCese: row.fechaCese ? row.fechaCese.slice(0, 10) : "",
+    motivoCese: row.motivoCese ?? "",
+    documentoCese: row.documentoCese ?? "",
     // En edit, las secciones vínculo/workplace están ocultas y el server las
     // ignora — usamos los defaults del variant para mantener el tipo.
     vinculo: emptyForm.vinculo,
     workplace: emptyForm.workplace,
   };
+}
+
+// ─────────────────────────── Cese rápido (baja desde la tabla) ───────────────────────────
+
+/** Diálogo para registrar la baja de un trabajador (ACTIVO → PASIVO) desde el
+ *  botón rápido de la tabla. Captura fecha + motivo + documento y llama a
+ *  setStaffStatus con esos datos. La baja desde el modal de edición usa los
+ *  mismos campos dentro del formulario. */
+function CeseDialog({
+  row,
+  onClose,
+  onDone,
+}: {
+  row: StaffRow;
+  onClose: () => void;
+  onDone: () => void;
+}) {
+  const [fecha, setFecha] = useState("");
+  const [motivo, setMotivo] = useState<StaffCeseMotivo | "">("");
+  const [documento, setDocumento] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const submit = async () => {
+    if (!fecha || !motivo) {
+      toast.error("Completa la fecha y el motivo del cese.");
+      return;
+    }
+    setSubmitting(true);
+    const res = await setStaffStatus(row.id, "PASIVO", {
+      fechaCese: fecha,
+      motivoCese: motivo,
+      documentoCese: documento,
+    });
+    setSubmitting(false);
+    if (res.ok) {
+      toast.success(`${row.fullName} dado de baja (PASIVO)`);
+      onDone();
+    } else {
+      toast.error(res.error);
+    }
+  };
+
+  return (
+    <div
+      className="modal-backdrop"
+      onMouseDown={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <div className="modal" style={{ maxWidth: 480 }}>
+        <div className="modal__head">
+          <h2>Registrar baja</h2>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={onClose}
+            aria-label="Cerrar"
+          >
+            <Icon name="close" size={18} />
+          </Button>
+        </div>
+        <div className="modal__body">
+          <p
+            style={{
+              fontSize: 13,
+              color: "var(--text-muted)",
+              marginBottom: 14,
+            }}
+          >
+            Vas a dar de baja a <b style={{ color: "var(--text)" }}>{row.fullName}</b>.
+            El trabajador pasará a <b>PASIVO</b>. Registra cuándo y por qué.
+          </p>
+          <Row>
+            <FieldDate
+              label="Fecha de cese *"
+              value={fecha}
+              onChange={setFecha}
+            />
+            <FieldSelect
+              label="Motivo del cese *"
+              value={motivo || ""}
+              options={[
+                { value: "", label: "— seleccionar —" },
+                ...STAFF_CESE_MOTIVOS.map((m) => ({
+                  value: m,
+                  label: CESE_MOTIVO_LABELS[m],
+                })),
+              ]}
+              onChange={(v) => setMotivo(v as StaffCeseMotivo | "")}
+              isString
+            />
+          </Row>
+          <FieldText
+            label="Documento de cese (resolución / carta de renuncia)"
+            value={documento}
+            onChange={setDocumento}
+            maxLength={300}
+          />
+        </div>
+        <div className="modal__foot">
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={onClose}
+            disabled={submitting}
+          >
+            Cancelar
+          </Button>
+          <Button type="button" onClick={submit} disabled={submitting}>
+            {submitting ? "Guardando…" : "Dar de baja"}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 // ─────────────────────────── Form Modal ───────────────────────────
@@ -1682,6 +1883,43 @@ function StaffFormModal({
             onChange={(v) => set("status", v as StaffStatus)}
             isString
           />
+
+          {/* Datos de cese: requeridos cuando el trabajador queda en baja. */}
+          {(CESE_STATUSES as readonly string[]).includes(form.status) && (
+            <>
+              <SectionTitle>Baja / Cese</SectionTitle>
+              <Row>
+                <FieldDate
+                  label="Fecha de cese *"
+                  value={form.fechaCese}
+                  onChange={(v) => set("fechaCese", v)}
+                  error={fieldErrors.fechaCese}
+                />
+                <FieldSelect
+                  label="Motivo del cese *"
+                  value={form.motivoCese || ""}
+                  options={[
+                    { value: "", label: "— seleccionar —" },
+                    ...STAFF_CESE_MOTIVOS.map((m) => ({
+                      value: m,
+                      label: CESE_MOTIVO_LABELS[m],
+                    })),
+                  ]}
+                  onChange={(v) =>
+                    set("motivoCese", v as StaffCeseMotivo | "")
+                  }
+                  error={fieldErrors.motivoCese}
+                  isString
+                />
+              </Row>
+              <FieldText
+                label="Documento de cese (resolución / carta de renuncia)"
+                value={form.documentoCese}
+                onChange={(v) => set("documentoCese", v)}
+                maxLength={300}
+              />
+            </>
+          )}
 
           {mode === "create" && (
             <>

@@ -21,12 +21,13 @@ import {
 } from "@/lib/sunedu/validation";
 import type {
   ActionResult,
+  StaffCeseMotivo,
   StaffInput,
   StaffStatus,
   VinculoInput,
   WorkplaceInput,
 } from "./types";
-import { STAFF_STATUSES } from "./types";
+import { CESE_STATUSES, STAFF_CESE_MOTIVOS, STAFF_STATUSES } from "./types";
 
 const NAME_MIN = 2;
 const NAME_MAX = 80;
@@ -150,6 +151,28 @@ function validateStaffFields(
   });
   Object.assign(fieldErrors, cond);
 
+  // Cese / baja: solo se exige (y se guarda) cuando el trabajador queda en un
+  // estado de baja (PASIVO/FALLECIMIENTO). En ACTIVO/LICENCIA se limpia.
+  const isCese = (CESE_STATUSES as readonly string[]).includes(input.status);
+  let fechaCese: Date | null = null;
+  let motivoCese: StaffCeseMotivo | null = null;
+  let documentoCese: string | null = null;
+  if (isCese) {
+    const fc = parseDate(input.fechaCese, "Fecha de cese");
+    if (typeof fc === "string") fieldErrors.fechaCese = fc;
+    else fechaCese = fc;
+    if (!input.motivoCese) {
+      fieldErrors.motivoCese = "Indica el motivo del cese.";
+    } else if (
+      !(STAFF_CESE_MOTIVOS as readonly string[]).includes(input.motivoCese)
+    ) {
+      fieldErrors.motivoCese = "Motivo de cese inválido.";
+    } else {
+      motivoCese = input.motivoCese;
+    }
+    documentoCese = input.documentoCese.trim() || null;
+  }
+
   if (Object.keys(fieldErrors).length > 0) {
     return { ok: false, result: fail("Revisa los campos marcados.", fieldErrors) };
   }
@@ -193,6 +216,9 @@ function validateStaffFields(
       status: (STAFF_STATUSES as readonly string[]).includes(input.status)
         ? input.status
         : "ACTIVO",
+      fechaCese,
+      motivoCese,
+      documentoCese,
     },
   };
 }
@@ -226,6 +252,9 @@ type ValidatedStaff = {
   plazaOrigen: string | null;
   plazaActual: string | null;
   status: StaffStatus;
+  fechaCese: Date | null;
+  motivoCese: StaffCeseMotivo | null;
+  documentoCese: string | null;
 };
 
 const VALID_CONDICIONES = new Set(["DETERMINADO", "INDETERMINADO", "CONFIANZA"]);
@@ -412,18 +441,50 @@ export async function updateStaff(
   }
 }
 
+/**
+ * Cambia el estado de un trabajador (y de paso gestiona los datos de cese).
+ *
+ * - Si `status` ∈ {PASIVO, FALLECIMIENTO} (CESE_STATUSES), `cese.fechaCese` y
+ *   `cese.motivoCese` son OBLIGATORIOS (`documentoCese` opcional). Si faltan o
+ *   son inválidos, retorna `fail(...)` con fieldErrors — no cambia nada.
+ * - Si `status` ∈ {ACTIVO, LICENCIA}, los 3 campos de cese se limpian (null) y
+ *   el parámetro `cese` se ignora.
+ */
 export async function setStaffStatus(
   id: string,
   status: StaffStatus,
+  cese?: { fechaCese?: string; motivoCese?: string; documentoCese?: string },
 ): Promise<ActionResult> {
   try {
     await authorize("staff.write");
     if (!(STAFF_STATUSES as readonly string[]).includes(status)) {
       return fail("Estado inválido.");
     }
+
+    // Si pasa a un estado de baja (PASIVO/FALLECIMIENTO) exigimos fecha+motivo;
+    // si vuelve a ACTIVO/LICENCIA limpiamos los datos de cese.
+    let fechaCese: Date | null = null;
+    let motivoCese: StaffCeseMotivo | null = null;
+    let documentoCese: string | null = null;
+    if ((CESE_STATUSES as readonly string[]).includes(status)) {
+      const fc = parseDate(cese?.fechaCese ?? "", "Fecha de cese");
+      if (typeof fc === "string") {
+        return fail(fc, { fechaCese: fc });
+      }
+      const motivo = cese?.motivoCese ?? "";
+      if (!(STAFF_CESE_MOTIVOS as readonly string[]).includes(motivo)) {
+        return fail("Indica un motivo de cese válido.", {
+          motivoCese: "Motivo de cese inválido.",
+        });
+      }
+      fechaCese = fc;
+      motivoCese = motivo as StaffCeseMotivo;
+      documentoCese = (cese?.documentoCese ?? "").trim() || null;
+    }
+
     await prisma.administrativeStaff.update({
       where: { id },
-      data: { status },
+      data: { status, fechaCese, motivoCese, documentoCese },
     });
     refresh();
     return ok();

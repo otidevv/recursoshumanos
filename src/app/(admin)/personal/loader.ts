@@ -13,6 +13,7 @@ import {
 import type {
   AdendaSummary,
   LocalOption,
+  StaffCeseMotivo,
   StaffCondition,
   StaffRow,
   StaffStatus,
@@ -168,6 +169,9 @@ export async function loadStaffData(
       availableYears,
 
       status: s.status as StaffStatus,
+      fechaCese: s.fechaCese?.toISOString() ?? null,
+      motivoCese: (s.motivoCese as StaffCeseMotivo | null) ?? null,
+      documentoCese: s.documentoCese,
       vinculosCount: s._count.vinculos,
       workplacesCount: s._count.workplaces,
       createdAt: s.createdAt.toISOString(),
