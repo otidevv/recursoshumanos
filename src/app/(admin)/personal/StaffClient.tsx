@@ -125,10 +125,15 @@ const VARIANT_CONFIG: Record<
     sub: "contratos con fecha de término y adendas",
     defaultCondicion: "DETERMINADO",
   },
-  indeterminados: {
-    title: "Personal Indeterminado · Confianza",
-    sub: "sin fecha de término — estables y cargos de confianza",
+  indeterminado: {
+    title: "Personal CAS Indeterminado",
+    sub: "sin fecha de término — personal estable",
     defaultCondicion: "INDETERMINADO",
+  },
+  confianza: {
+    title: "Personal CAS Confianza",
+    sub: "cargos de confianza — sin fecha de término",
+    defaultCondicion: "CONFIANZA",
   },
 };
 
@@ -178,6 +183,13 @@ function buildEmptyForm(variant: StaffVariant): StaffInput {
     },
   };
 }
+
+// Orden canónico de las condiciones de contrato para la faceta "Condición".
+const CONDICION_ORDER: StaffCondition[] = [
+  "INDETERMINADO",
+  "CONFIANZA",
+  "DETERMINADO",
+];
 
 // Quita de un Set los valores que ya no existen en las opciones actuales.
 // Devuelve el MISMO Set si no hubo cambios, para no disparar renders en bucle.
@@ -269,10 +281,18 @@ export function StaffClient({ rows, localOptions, perms, variant }: Props) {
   const [dependenciaFilter, setDependenciaFilter] = useState<Set<number>>(
     new Set(),
   );
+  // Facetas propias de la vista Indeterminados/Confianza (no se renderizan en
+  // CAS, donde la condición es siempre DETERMINADO).
+  const [condicionFilter, setCondicionFilter] = useState<Set<StaffCondition>>(
+    new Set(),
+  );
+  const [regimenFilter, setRegimenFilter] = useState<Set<number>>(new Set());
   const clearAllFilters = () => {
     setEstadoFilter(new Set());
     setCargoFilter(new Set());
     setDependenciaFilter(new Set());
+    setCondicionFilter(new Set());
+    setRegimenFilter(new Set());
   };
 
   // Selección de filas (para export selectivo). Se mantiene durante toda la
@@ -297,6 +317,8 @@ export function StaffClient({ rows, localOptions, perms, variant }: Props) {
     setEstadoFilter(new Set());
     setCargoFilter(new Set());
     setDependenciaFilter(new Set());
+    setCondicionFilter(new Set());
+    setRegimenFilter(new Set());
   }, [variant]);
 
   // Años disponibles en todos los trabajadores cargados (orden DESC = más
@@ -331,6 +353,32 @@ export function StaffClient({ rows, localOptions, perms, variant }: Props) {
       label: s,
     }));
   }, [rows]);
+  const condicionOptions = useMemo(() => {
+    const present = new Set(
+      rows
+        .map((r) => r.currentCondicion)
+        .filter((c): c is StaffCondition => c != null),
+    );
+    return CONDICION_ORDER.filter((c) => present.has(c)).map((c) => ({
+      value: c,
+      label: c,
+    }));
+  }, [rows]);
+  const regimenOptions = useMemo(() => {
+    const m = new Map<number, string>();
+    for (const r of rows) {
+      if (r.currentRegimenLaboralCode != null) {
+        m.set(
+          r.currentRegimenLaboralCode,
+          r.currentRegimenLaboralLabel ??
+            `Régimen ${r.currentRegimenLaboralCode}`,
+        );
+      }
+    }
+    return [...m]
+      .map(([value, label]) => ({ value, label }))
+      .sort((a, b) => a.label.localeCompare(b.label, "es"));
+  }, [rows]);
 
   // Selección "efectiva": ignora valores huérfanos que ya no existen en los
   // datos actuales (p. ej. tras router.refresh() que cambió los rows). Se
@@ -349,10 +397,20 @@ export function StaffClient({ rows, localOptions, perms, variant }: Props) {
     () => pruneSet(dependenciaFilter, dependenciaOptions),
     [dependenciaFilter, dependenciaOptions],
   );
+  const effCondicionFilter = useMemo(
+    () => pruneSet(condicionFilter, condicionOptions),
+    [condicionFilter, condicionOptions],
+  );
+  const effRegimenFilter = useMemo(
+    () => pruneSet(regimenFilter, regimenOptions),
+    [regimenFilter, regimenOptions],
+  );
   const anyFacetActive =
     effEstadoFilter.size > 0 ||
     effCargoFilter.size > 0 ||
-    effDependenciaFilter.size > 0;
+    effDependenciaFilter.size > 0 ||
+    effCondicionFilter.size > 0 ||
+    effRegimenFilter.size > 0;
 
   // Paginación: page (1-indexed) + pageSize (0 = "Todos"). pageSize se
   // persiste en localStorage por variant; page se resetea al cambiar query.
@@ -385,6 +443,8 @@ export function StaffClient({ rows, localOptions, perms, variant }: Props) {
     effEstadoFilter,
     effCargoFilter,
     effDependenciaFilter,
+    effCondicionFilter,
+    effRegimenFilter,
   ]);
 
   const refresh = useCallback(
@@ -410,6 +470,20 @@ export function StaffClient({ rows, localOptions, perms, variant }: Props) {
     }
     if (effDependenciaFilter.size > 0) {
       base = base.filter((r) => effDependenciaFilter.has(r.dependenciaCode));
+    }
+    if (effCondicionFilter.size > 0) {
+      base = base.filter(
+        (r) =>
+          r.currentCondicion != null &&
+          effCondicionFilter.has(r.currentCondicion),
+      );
+    }
+    if (effRegimenFilter.size > 0) {
+      base = base.filter(
+        (r) =>
+          r.currentRegimenLaboralCode != null &&
+          effRegimenFilter.has(r.currentRegimenLaboralCode),
+      );
     }
 
     // 3) Filtro por texto del search.
@@ -441,6 +515,8 @@ export function StaffClient({ rows, localOptions, perms, variant }: Props) {
     effEstadoFilter,
     effCargoFilter,
     effDependenciaFilter,
+    effCondicionFilter,
+    effRegimenFilter,
   ]);
 
   // URL de exportación — 3 modos en orden de prioridad:
@@ -488,6 +564,10 @@ export function StaffClient({ rows, localOptions, perms, variant }: Props) {
         params.set("cargo", [...effCargoFilter].join(","));
       if (effDependenciaFilter.size > 0)
         params.set("dep", [...effDependenciaFilter].join(","));
+      if (effCondicionFilter.size > 0)
+        params.set("condicion", [...effCondicionFilter].join(","));
+      if (effRegimenFilter.size > 0)
+        params.set("regimen", [...effRegimenFilter].join(","));
     }
     const qs = params.toString();
     return qs ? `/api/personal/export?${qs}` : "/api/personal/export";
@@ -499,6 +579,8 @@ export function StaffClient({ rows, localOptions, perms, variant }: Props) {
     effEstadoFilter,
     effCargoFilter,
     effDependenciaFilter,
+    effCondicionFilter,
+    effRegimenFilter,
   ]);
 
   // Etiqueta dinámica del botón refleja qué se va a exportar.
@@ -508,8 +590,9 @@ export function StaffClient({ rows, localOptions, perms, variant }: Props) {
     if (exportMode === "filtered")
       return `${exportIds.length} resultado${exportIds.length === 1 ? "" : "s"} filtrado${exportIds.length === 1 ? "" : "s"}`;
     const bits: string[] = [];
-    if (variant === "cas") bits.push("CAS");
-    else if (variant === "indeterminados") bits.push("Indet/Confianza");
+    if (variant === "cas") bits.push("CAS Determinado");
+    else if (variant === "indeterminado") bits.push("CAS Indeterminado");
+    else if (variant === "confianza") bits.push("CAS Confianza");
     else bits.push("Todos");
     if (yearFilter != null) bits.push(String(yearFilter));
     // Las facetas SÍ se aplican en modo variant (params server-side), así que
@@ -528,6 +611,57 @@ export function StaffClient({ rows, localOptions, perms, variant }: Props) {
   const to = Math.min(from + effectiveSize, filtered.length);
   const displayed = pageSize === 0 ? filtered : filtered.slice(from, to);
 
+  // Chips de filtros activos (una entrada por faceta con selección). Se calcula
+  // aquí para mantener FilterChips agnóstico del conjunto de facetas.
+  const labelOf = (opts: { value: number; label: string }[], code: number) =>
+    opts.find((o) => o.value === code)?.label ?? String(code);
+  const filterChips: { key: string; text: string; onRemove: () => void }[] = [];
+  if (effEstadoFilter.size > 0)
+    filterChips.push({
+      key: "estado",
+      text:
+        effEstadoFilter.size === 1
+          ? `Estado: ${[...effEstadoFilter][0]}`
+          : `Estado: ${effEstadoFilter.size}`,
+      onRemove: () => setEstadoFilter(new Set()),
+    });
+  if (effCargoFilter.size > 0)
+    filterChips.push({
+      key: "cargo",
+      text:
+        effCargoFilter.size === 1
+          ? `Cargo: ${labelOf(cargoOptions, [...effCargoFilter][0])}`
+          : `Cargo: ${effCargoFilter.size}`,
+      onRemove: () => setCargoFilter(new Set()),
+    });
+  if (effDependenciaFilter.size > 0)
+    filterChips.push({
+      key: "dependencia",
+      text:
+        effDependenciaFilter.size === 1
+          ? `Dependencia: ${labelOf(dependenciaOptions, [...effDependenciaFilter][0])}`
+          : `Dependencia: ${effDependenciaFilter.size}`,
+      onRemove: () => setDependenciaFilter(new Set()),
+    });
+  if (effCondicionFilter.size > 0)
+    filterChips.push({
+      key: "condicion",
+      text:
+        effCondicionFilter.size === 1
+          ? `Condición: ${[...effCondicionFilter][0]}`
+          : `Condición: ${effCondicionFilter.size}`,
+      onRemove: () => setCondicionFilter(new Set()),
+    });
+  if (effRegimenFilter.size > 0)
+    filterChips.push({
+      key: "regimen",
+      text:
+        effRegimenFilter.size === 1
+          ? `Régimen: ${labelOf(regimenOptions, [...effRegimenFilter][0])}`
+          : `Régimen: ${effRegimenFilter.size}`,
+      onRemove: () => setRegimenFilter(new Set()),
+    });
+
   return (
     <div className="page">
       <div className="page__tabs">
@@ -544,10 +678,16 @@ export function StaffClient({ rows, localOptions, perms, variant }: Props) {
           CAS Determinado
         </a>
         <a
-          className={`tab ${variant === "indeterminados" ? "is-active" : ""}`}
-          href="/personal/indeterminados"
+          className={`tab ${variant === "indeterminado" ? "is-active" : ""}`}
+          href="/personal/indeterminado"
         >
-          Indeterminado · Confianza
+          CAS Indeterminado
+        </a>
+        <a
+          className={`tab ${variant === "confianza" ? "is-active" : ""}`}
+          href="/personal/confianza"
+        >
+          CAS Confianza
         </a>
       </div>
 
@@ -623,6 +763,27 @@ export function StaffClient({ rows, localOptions, perms, variant }: Props) {
           selected={effDependenciaFilter}
           onChange={setDependenciaFilter}
         />
+        {/* Condición solo tiene sentido donde se mezclan varias (vista Todos);
+            cada vista por condición ya es de un solo valor. */}
+        {variant === "all" && (
+          <FacetFilter
+            label="Condición"
+            options={condicionOptions}
+            selected={effCondicionFilter}
+            onChange={setCondicionFilter}
+            searchable={false}
+          />
+        )}
+        {/* Régimen: útil en Todos + las dos vistas Indeterminado/Confianza
+            (CAS Determinado conserva solo las 3 facetas base). */}
+        {variant !== "cas" && (
+          <FacetFilter
+            label="Régimen"
+            options={regimenOptions}
+            selected={effRegimenFilter}
+            onChange={setRegimenFilter}
+          />
+        )}
         <ColumnVisibilityMenu
           cols={COLUMNS_BY_VARIANT[variant]}
           visibility={columnVisibility}
@@ -634,16 +795,9 @@ export function StaffClient({ rows, localOptions, perms, variant }: Props) {
 
       {anyFacetActive && (
         <FilterChips
-          estado={effEstadoFilter}
-          cargo={effCargoFilter}
-          dependencia={effDependenciaFilter}
-          cargoOptions={cargoOptions}
-          dependenciaOptions={dependenciaOptions}
+          chips={filterChips}
           resultCount={filtered.length}
           totalCount={rows.length}
-          onClearEstado={() => setEstadoFilter(new Set())}
-          onClearCargo={() => setCargoFilter(new Set())}
-          onClearDependencia={() => setDependenciaFilter(new Set())}
           onClearAll={clearAllFilters}
         />
       )}
@@ -1534,9 +1688,11 @@ function StaffFormModal({
               <SectionTitle>
                 {variant === "cas"
                   ? "Contrato CAS Determinado"
-                  : variant === "indeterminados"
-                    ? "Vínculo Indeterminado · Confianza"
-                    : "Vínculo laboral inicial"}
+                  : variant === "indeterminado"
+                    ? "Vínculo CAS Indeterminado"
+                    : variant === "confianza"
+                      ? "Vínculo CAS Confianza"
+                      : "Vínculo laboral inicial"}
               </SectionTitle>
               <Row>
                 <FieldSelect
@@ -2219,67 +2375,20 @@ function FacetFilter<T extends string | number>({
   );
 }
 
-/** Chips de filtros activos debajo de la barra. Una elección por faceta se
- *  muestra con su etiqueta; múltiples, con el conteo. El ✕ limpia esa faceta.
+/** Chips de filtros activos debajo de la barra. Recibe la lista ya calculada
+ *  (agnóstico del conjunto de facetas). El ✕ de cada chip limpia esa faceta.
  *  A la derecha, el conteo de resultados vs total. */
 function FilterChips({
-  estado,
-  cargo,
-  dependencia,
-  cargoOptions,
-  dependenciaOptions,
+  chips,
   resultCount,
   totalCount,
-  onClearEstado,
-  onClearCargo,
-  onClearDependencia,
   onClearAll,
 }: {
-  estado: Set<StaffStatus>;
-  cargo: Set<number>;
-  dependencia: Set<number>;
-  cargoOptions: { value: number; label: string }[];
-  dependenciaOptions: { value: number; label: string }[];
+  chips: { key: string; text: string; onRemove: () => void }[];
   resultCount: number;
   totalCount: number;
-  onClearEstado: () => void;
-  onClearCargo: () => void;
-  onClearDependencia: () => void;
   onClearAll: () => void;
 }) {
-  const labelFor = (opts: { value: number; label: string }[], code: number) =>
-    opts.find((o) => o.value === code)?.label ?? String(code);
-
-  const chips: { key: string; text: string; onRemove: () => void }[] = [];
-  if (estado.size > 0) {
-    chips.push({
-      key: "estado",
-      text:
-        estado.size === 1 ? `Estado: ${[...estado][0]}` : `Estado: ${estado.size}`,
-      onRemove: onClearEstado,
-    });
-  }
-  if (cargo.size > 0) {
-    chips.push({
-      key: "cargo",
-      text:
-        cargo.size === 1
-          ? `Cargo: ${labelFor(cargoOptions, [...cargo][0])}`
-          : `Cargo: ${cargo.size}`,
-      onRemove: onClearCargo,
-    });
-  }
-  if (dependencia.size > 0) {
-    chips.push({
-      key: "dependencia",
-      text:
-        dependencia.size === 1
-          ? `Dependencia: ${labelFor(dependenciaOptions, [...dependencia][0])}`
-          : `Dependencia: ${dependencia.size}`,
-      onRemove: onClearDependencia,
-    });
-  }
-
   return (
     <div
       style={{
@@ -2834,7 +2943,25 @@ const COLUMNS_BY_VARIANT: Record<StaffVariant, StaffColumn[]> = {
     COL_TERMINO,
     COL_ADENDA,
   ],
-  indeterminados: [
+  indeterminado: [
+    COL_NRO,
+    COL_ESTADO,
+    COL_NOMBRE,
+    COL_CUMPLE,
+    COL_DNI,
+    COL_GRADO,
+    COL_GRUPO,
+    COL_CARRERA,
+    COL_SEXO,
+    COL_CARGO,
+    COL_CONDICION,
+    COL_REGIMEN,
+    COL_PLAZA_ORIGEN,
+    COL_PLAZA_ACTUAL,
+    COL_CORREO,
+    COL_CELULAR,
+  ],
+  confianza: [
     COL_NRO,
     COL_ESTADO,
     COL_NOMBRE,
@@ -2895,7 +3022,8 @@ const DEFAULT_HIDDEN_BY_VARIANT: Record<StaffVariant, Set<string>> = {
     "cumple",
     "adenda",
   ]),
-  indeterminados: new Set<string>(),
+  indeterminado: new Set<string>(),
+  confianza: new Set<string>(),
   all: new Set<string>(),
 };
 

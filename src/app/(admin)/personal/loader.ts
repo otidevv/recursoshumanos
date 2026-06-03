@@ -1,6 +1,6 @@
-// Shared server-side loader for the AdministrativeStaff list across the three
+// Shared server-side loader for the AdministrativeStaff list across the
 // surfaces: /personal (all), /personal/cas (DETERMINADO),
-// /personal/indeterminados (INDETERMINADO + CONFIANZA).
+// /personal/indeterminado (INDETERMINADO), /personal/confianza (CONFIANZA).
 
 import "server-only";
 import { prisma } from "@/lib/prisma";

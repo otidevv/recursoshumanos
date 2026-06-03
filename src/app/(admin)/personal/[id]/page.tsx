@@ -64,10 +64,11 @@ export default async function Page({
   const editPath =
     lastVinculo?.condicionContrato === "DETERMINADO"
       ? "/personal/cas"
-      : lastVinculo?.condicionContrato === "INDETERMINADO" ||
-          lastVinculo?.condicionContrato === "CONFIANZA"
-        ? "/personal/indeterminados"
-        : "/personal";
+      : lastVinculo?.condicionContrato === "INDETERMINADO"
+        ? "/personal/indeterminado"
+        : lastVinculo?.condicionContrato === "CONFIANZA"
+          ? "/personal/confianza"
+          : "/personal";
 
   // Antigüedad
   const today = new Date();

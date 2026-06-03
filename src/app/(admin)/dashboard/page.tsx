@@ -153,7 +153,8 @@ export default async function Page() {
         <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)", marginBottom: 10 }}>Accesos rápidos</div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
           <QuickLink href="/personal/cas">CAS Determinado</QuickLink>
-          <QuickLink href="/personal/indeterminados">Indeterminados</QuickLink>
+          <QuickLink href="/personal/indeterminado">CAS Indeterminado</QuickLink>
+          <QuickLink href="/personal/confianza">CAS Confianza</QuickLink>
           <QuickLink href="/personal">Export SUNEDU</QuickLink>
           <QuickLink href="/personal/reportes">Reportes</QuickLink>
           <QuickLink href="/personal/designaciones">Designaciones</QuickLink>

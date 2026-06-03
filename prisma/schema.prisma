@@ -340,8 +340,8 @@ model StaffEmploymentLink {
 
   // Discriminador interno UNAMAD:
   //   "DETERMINADO"   → /personal/cas
-  //   "INDETERMINADO" → /personal/indeterminados
-  //   "CONFIANZA"     → /personal/indeterminados (cargo de confianza)
+  //   "INDETERMINADO" → /personal/indeterminado
+  //   "CONFIANZA"     → /personal/confianza
   condicionContrato StaffContractCondition?
   esAdenda          Boolean                 @default(false)
 

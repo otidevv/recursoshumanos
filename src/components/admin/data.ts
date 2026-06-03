@@ -24,9 +24,14 @@ export const SIDEBAR_NAV: SidebarItem[] = [
       { id: "personal-all", label: "Todos / Export SUNEDU", href: "/personal" },
       { id: "personal-cas", label: "CAS Determinado", href: "/personal/cas" },
       {
-        id: "personal-indeterminados",
-        label: "Indeterminados · Confianza",
-        href: "/personal/indeterminados",
+        id: "personal-indeterminado",
+        label: "CAS Indeterminado",
+        href: "/personal/indeterminado",
+      },
+      {
+        id: "personal-confianza",
+        label: "CAS Confianza",
+        href: "/personal/confianza",
       },
       {
         id: "personal-reportes",

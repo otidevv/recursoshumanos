@@ -6,11 +6,15 @@
 //
 // Query params (todos opcionales):
 //   variant=cas              → solo workers cuyo vínculo es DETERMINADO
-//   variant=indeterminados   → solo workers cuyo vínculo es INDETERMINADO o CONFIANZA
+//   variant=indeterminado    → solo workers cuyo vínculo es INDETERMINADO
+//   variant=confianza        → solo workers cuyo vínculo es CONFIANZA
+//   variant=indeterminados   → (compat) INDETERMINADO o CONFIANZA (vista antigua)
 //   year=2026                → solo workers con al menos un vínculo en ese año
 //   cargo=3,9                → solo esos cargoCode (facetas de la UI)
 //   dep=9,4                  → solo esos dependenciaCode (facetas de la UI)
 //   estado=ACTIVO,LICENCIA   → estrecha el estado DENTRO de lo exportable
+//   condicion=INDETERMINADO  → refina la condición del vínculo (vista Indet.)
+//   regimen=4,7              → solo esos regimenLaboralCode (facetas de la UI)
 //   ids=cuid1,cuid2,cuid3    → solo esos workers específicos (override variant/year/facetas)
 //
 // Combinaciones: variant=cas&year=2026&cargo=3 → DETERMINADO + año 2026 + cargo 3.
@@ -57,10 +61,23 @@ export async function GET(req: NextRequest) {
       : [];
   const cargoCodes = parseCodes(url.searchParams.get("cargo"));
   const depCodes = parseCodes(url.searchParams.get("dep"));
+  const regimenCodes = parseCodes(url.searchParams.get("regimen"));
   const estadosRaw = (url.searchParams.get("estado") ?? "")
     .split(",")
     .map((s) => s.trim())
     .filter(Boolean);
+  const condicionesRaw = (url.searchParams.get("condicion") ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const VALID_CONDICIONES = [
+    "DETERMINADO",
+    "INDETERMINADO",
+    "CONFIANZA",
+  ] as const;
+  const condicionFacet = VALID_CONDICIONES.filter((c) =>
+    condicionesRaw.includes(c),
+  );
 
   // Construye filtro Prisma.
   const where: Prisma.AdministrativeStaffWhereInput = {
@@ -71,9 +88,9 @@ export async function GET(req: NextRequest) {
     // Exportación de selección específica — ignora variant/year/facetas.
     where.id = { in: ids };
   } else {
-    // Facetas de la UI (Cargo / Dependencia / Estado). El facet Estado solo
-    // puede estrechar dentro del conjunto exportable (ACTIVO/LICENCIA): si el
-    // usuario pidió solo PASIVO, la intersección es vacía → 0 filas.
+    // Facetas staff-level (exactas): Cargo / Dependencia / Estado. El facet
+    // Estado solo puede estrechar dentro del conjunto exportable (ACTIVO/
+    // LICENCIA): si el usuario pidió solo PASIVO, la intersección es vacía → 0.
     if (cargoCodes.length > 0) {
       where.cargoCode = { in: cargoCodes };
     }
@@ -86,11 +103,21 @@ export async function GET(req: NextRequest) {
       where.status = { in: [...allowed] };
     }
 
-    // Filtro compuesto sobre vínculos: condicion + año juntos en `some`.
+    // Prefiltro coarse por variant (condición del contrato) + año, vía `some`.
+    // Las facetas Condición/Régimen NO van aquí: el cliente las filtra por el
+    // vínculo MÁS RECIENTE (currentCondicion/currentRegimenLaboralCode), no por
+    // "cualquier vínculo histórico". Para no divergir de la tabla, las afinamos
+    // en memoria tras la query (ver más abajo). Este `some` solo limita las
+    // filas cargadas y es un superconjunto del resultado final.
     const vinculosFilter: Prisma.StaffEmploymentLinkWhereInput = {};
     if (variant === "cas") {
       vinculosFilter.condicionContrato = "DETERMINADO";
+    } else if (variant === "indeterminado") {
+      vinculosFilter.condicionContrato = "INDETERMINADO";
+    } else if (variant === "confianza") {
+      vinculosFilter.condicionContrato = "CONFIANZA";
     } else if (variant === "indeterminados") {
+      // Compat: enlace antiguo de la vista combinada (ahora separada).
       vinculosFilter.condicionContrato = {
         in: ["INDETERMINADO", "CONFIANZA"],
       };
@@ -114,7 +141,35 @@ export async function GET(req: NextRequest) {
     orderBy: [{ primerApellido: "asc" }, { nombres: "asc" }],
   });
 
-  const rows: StaffExportRow[] = staff.map((s) => ({
+  // Afinado de facetas Condición/Régimen por el vínculo MÁS RECIENTE — idéntico
+  // a la UI (loader.ts deriva currentCondicion/currentRegimenLaboralCode del
+  // último vínculo por fechaInicio). `vinculos` viene ASC, así que el más
+  // reciente es el último. En modo `ids` (selección explícita) no aplica.
+  const applyFacets =
+    ids.length === 0 && (condicionFacet.length > 0 || regimenCodes.length > 0);
+  const facetFilteredStaff = applyFacets
+    ? staff.filter((s) => {
+        const latest = s.vinculos[s.vinculos.length - 1];
+        if (!latest) return false;
+        if (
+          condicionFacet.length > 0 &&
+          !condicionFacet.includes(
+            latest.condicionContrato as (typeof VALID_CONDICIONES)[number],
+          )
+        ) {
+          return false;
+        }
+        if (
+          regimenCodes.length > 0 &&
+          !regimenCodes.includes(latest.regimenLaboralCode)
+        ) {
+          return false;
+        }
+        return true;
+      })
+    : staff;
+
+  const rows: StaffExportRow[] = facetFilteredStaff.map((s) => ({
     cargoCode: s.cargoCode,
     dependenciaCode: s.dependenciaCode,
     fechaIngresoIE: s.fechaIngresoIE,
@@ -160,10 +215,18 @@ export async function GET(req: NextRequest) {
   if (ids.length > 0) parts.push(`SELECCION_${ids.length}`);
   else {
     if (variant === "cas") parts.push("CAS");
+    else if (variant === "indeterminado") parts.push("INDETERMINADO");
+    else if (variant === "confianza") parts.push("CONFIANZA");
     else if (variant === "indeterminados") parts.push("INDET");
     else parts.push("TODOS");
     if (validYear != null) parts.push(String(validYear));
-    if (cargoCodes.length || depCodes.length || estadosRaw.length)
+    if (
+      cargoCodes.length ||
+      depCodes.length ||
+      estadosRaw.length ||
+      regimenCodes.length ||
+      condicionesRaw.length
+    )
       parts.push("FILTRADO");
   }
   parts.push(fechaStr);

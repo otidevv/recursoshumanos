@@ -512,9 +512,11 @@ export function QualityClient({ data }: { data: QualityData }) {
                   const editPath =
                     r.currentCondicion === "DETERMINADO"
                       ? "/personal/cas"
-                      : r.currentCondicion === "INDETERMINADO" || r.currentCondicion === "CONFIANZA"
-                        ? "/personal/indeterminados"
-                        : "/personal";
+                      : r.currentCondicion === "INDETERMINADO"
+                        ? "/personal/indeterminado"
+                        : r.currentCondicion === "CONFIANZA"
+                          ? "/personal/confianza"
+                          : "/personal";
                   return (
                     <tr key={r.id} style={{ borderBottom: "1px solid var(--border)" }}>
                       <td style={td()}>

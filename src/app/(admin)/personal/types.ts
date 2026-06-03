@@ -1,5 +1,5 @@
 export type StaffCondition = "DETERMINADO" | "INDETERMINADO" | "CONFIANZA";
-export type StaffVariant = "all" | "cas" | "indeterminados";
+export type StaffVariant = "all" | "cas" | "indeterminado" | "confianza";
 export type StaffStatus = "ACTIVO" | "PASIVO" | "LICENCIA" | "FALLECIMIENTO";
 
 /** Resumen de un vínculo (contrato original o adenda) para mostrar la
