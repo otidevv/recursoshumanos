@@ -3000,6 +3000,20 @@ const COLUMNS_BY_VARIANT: Record<StaffVariant, StaffColumn[]> = {
 // Columnas que NUNCA se pueden ocultar (siempre visibles)
 const REQUIRED_COLS = new Set<string>(["nombre"]);
 
+// Indeterminado y Confianza comparten columnas y ocultan el mismo set por
+// defecto. Visibles: N°, Estado, Nombre, DNI, Cargo, Condición, Régimen.
+const INDET_CONF_HIDDEN = [
+  "cumple",
+  "gradoMaximo",
+  "grupoCarrera",
+  "carrera",
+  "sexo",
+  "plazaOrigen",
+  "plazaActual",
+  "correoPersonal",
+  "celular",
+];
+
 // Columnas ocultas de fábrica por variant. El usuario las puede reactivar desde
 // el menú "Columnas"; "Restaurar predeterminadas" vuelve a este estado. Una
 // elección explícita del usuario (persistida en localStorage) siempre gana
@@ -3022,8 +3036,8 @@ const DEFAULT_HIDDEN_BY_VARIANT: Record<StaffVariant, Set<string>> = {
     "cumple",
     "adenda",
   ]),
-  indeterminado: new Set<string>(),
-  confianza: new Set<string>(),
+  indeterminado: new Set<string>(INDET_CONF_HIDDEN),
+  confianza: new Set<string>(INDET_CONF_HIDDEN),
   all: new Set<string>(),
 };
 
