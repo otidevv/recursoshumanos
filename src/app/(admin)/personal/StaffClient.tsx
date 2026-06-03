@@ -179,6 +179,20 @@ function buildEmptyForm(variant: StaffVariant): StaffInput {
   };
 }
 
+// Quita de un Set los valores que ya no existen en las opciones actuales.
+// Devuelve el MISMO Set si no hubo cambios, para no disparar renders en bucle.
+function pruneSet<T>(set: Set<T>, options: { value: T }[]): Set<T> {
+  if (set.size === 0) return set;
+  const valid = new Set(options.map((o) => o.value));
+  let changed = false;
+  const next = new Set<T>();
+  for (const v of set) {
+    if (valid.has(v)) next.add(v);
+    else changed = true;
+  }
+  return changed ? next : set;
+}
+
 export function StaffClient({ rows, localOptions, perms, variant }: Props) {
   const router = useRouter();
   const pathname = usePathname();
@@ -248,6 +262,19 @@ export function StaffClient({ rows, localOptions, perms, variant }: Props) {
   // Filtro por año del contrato. null = todos los años.
   const [yearFilter, setYearFilter] = useState<number | null>(null);
 
+  // Filtros por faceta (multi-selección). Set vacío = sin filtro (pasa todo).
+  // Las opciones se derivan de los rows presentes, así nunca hay facetas vacías.
+  const [estadoFilter, setEstadoFilter] = useState<Set<StaffStatus>>(new Set());
+  const [cargoFilter, setCargoFilter] = useState<Set<number>>(new Set());
+  const [dependenciaFilter, setDependenciaFilter] = useState<Set<number>>(
+    new Set(),
+  );
+  const clearAllFilters = () => {
+    setEstadoFilter(new Set());
+    setCargoFilter(new Set());
+    setDependenciaFilter(new Set());
+  };
+
   // Selección de filas (para export selectivo). Se mantiene durante toda la
   // sesión del usuario hasta que limpia manualmente o navega de variant.
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -267,6 +294,9 @@ export function StaffClient({ rows, localOptions, perms, variant }: Props) {
   // tener selección "fantasma" entre vistas es confuso).
   useEffect(() => {
     setSelectedIds(new Set());
+    setEstadoFilter(new Set());
+    setCargoFilter(new Set());
+    setDependenciaFilter(new Set());
   }, [variant]);
 
   // Años disponibles en todos los trabajadores cargados (orden DESC = más
@@ -276,6 +306,53 @@ export function StaffClient({ rows, localOptions, perms, variant }: Props) {
     for (const r of rows) for (const y of r.availableYears) s.add(y);
     return [...s].sort((a, b) => b - a);
   }, [rows]);
+
+  // Opciones de cada faceta derivadas de los rows cargados (solo valores que
+  // realmente existen). Cargo/Dependencia ordenados alfabéticamente; Estado
+  // respeta el orden canónico de STAFF_STATUSES.
+  const cargoOptions = useMemo(() => {
+    const m = new Map<number, string>();
+    for (const r of rows) m.set(r.cargoCode, r.cargoLabel);
+    return [...m]
+      .map(([value, label]) => ({ value, label }))
+      .sort((a, b) => a.label.localeCompare(b.label, "es"));
+  }, [rows]);
+  const dependenciaOptions = useMemo(() => {
+    const m = new Map<number, string>();
+    for (const r of rows) m.set(r.dependenciaCode, r.dependenciaLabel);
+    return [...m]
+      .map(([value, label]) => ({ value, label }))
+      .sort((a, b) => a.label.localeCompare(b.label, "es"));
+  }, [rows]);
+  const estadoOptions = useMemo(() => {
+    const present = new Set(rows.map((r) => r.status));
+    return STAFF_STATUSES.filter((s) => present.has(s)).map((s) => ({
+      value: s,
+      label: s,
+    }));
+  }, [rows]);
+
+  // Selección "efectiva": ignora valores huérfanos que ya no existen en los
+  // datos actuales (p. ej. tras router.refresh() que cambió los rows). Se
+  // deriva en render (sin efecto/setState, patrón recomendado por React) y
+  // pruneSet conserva la identidad del Set si no hay cambios, así no
+  // recalculamos de más río abajo.
+  const effEstadoFilter = useMemo(
+    () => pruneSet(estadoFilter, estadoOptions),
+    [estadoFilter, estadoOptions],
+  );
+  const effCargoFilter = useMemo(
+    () => pruneSet(cargoFilter, cargoOptions),
+    [cargoFilter, cargoOptions],
+  );
+  const effDependenciaFilter = useMemo(
+    () => pruneSet(dependenciaFilter, dependenciaOptions),
+    [dependenciaFilter, dependenciaOptions],
+  );
+  const anyFacetActive =
+    effEstadoFilter.size > 0 ||
+    effCargoFilter.size > 0 ||
+    effDependenciaFilter.size > 0;
 
   // Paginación: page (1-indexed) + pageSize (0 = "Todos"). pageSize se
   // persiste en localStorage por variant; page se resetea al cambiar query.
@@ -300,7 +377,15 @@ export function StaffClient({ rows, localOptions, perms, variant }: Props) {
   // Resetea a página 1 cuando cambia el filtro o pageSize.
   useEffect(() => {
     setPage(1);
-  }, [query, pageSize, variant, yearFilter]);
+  }, [
+    query,
+    pageSize,
+    variant,
+    yearFilter,
+    effEstadoFilter,
+    effCargoFilter,
+    effDependenciaFilter,
+  ]);
 
   const refresh = useCallback(
     () => startTransition(() => router.refresh()),
@@ -314,7 +399,20 @@ export function StaffClient({ rows, localOptions, perms, variant }: Props) {
       base = base.filter((r) => r.availableYears.includes(yearFilter));
     }
 
-    // 2) Filtro por texto del search.
+    // 2) Filtros por faceta (Estado / Cargo / Dependencia). Set vacío = pasa
+    //    todo. Cada faceta es OR interno (cualquiera de los valores marcados)
+    //    y AND entre facetas (deben cumplirse todas las activas).
+    if (effEstadoFilter.size > 0) {
+      base = base.filter((r) => effEstadoFilter.has(r.status));
+    }
+    if (effCargoFilter.size > 0) {
+      base = base.filter((r) => effCargoFilter.has(r.cargoCode));
+    }
+    if (effDependenciaFilter.size > 0) {
+      base = base.filter((r) => effDependenciaFilter.has(r.dependenciaCode));
+    }
+
+    // 3) Filtro por texto del search.
     const q = normalizeSearch(query.trim());
     if (!q) return base;
     const tokens = q.split(/\s+/).filter(Boolean);
@@ -336,13 +434,24 @@ export function StaffClient({ rows, localOptions, perms, variant }: Props) {
       );
       return tokens.every((t) => haystack.includes(t));
     });
-  }, [rows, query, yearFilter]);
+  }, [
+    rows,
+    query,
+    yearFilter,
+    effEstadoFilter,
+    effCargoFilter,
+    effDependenciaFilter,
+  ]);
 
   // URL de exportación — 3 modos en orden de prioridad:
   // 1) Selección manual (checkboxes) → ?ids=cuid1,cuid2,...
   // 2) Búsqueda por texto activa Y filtered ≤ 200 → ?ids= con cuids visibles
   // 3) Solo variant + year → ?variant=&year=
   const URL_IDS_LIMIT = 200;
+  // El modo "filtered" (lista explícita de ids en la URL) solo se usa para la
+  // búsqueda de texto, que NO puede expresarse server-side. Las facetas
+  // (Estado/Cargo/Dependencia) sí viajan como params al server en modo
+  // "variant", así que se aplican siempre — sin el tope de 200 ids.
   const exportMode: "selection" | "filtered" | "variant" =
     selectedIds.size > 0
       ? "selection"
@@ -372,24 +481,42 @@ export function StaffClient({ rows, localOptions, perms, variant }: Props) {
     } else {
       if (variant !== "all") params.set("variant", variant);
       if (yearFilter != null) params.set("year", String(yearFilter));
+      // Facetas aplicadas server-side cuando no exportamos por ids.
+      if (effEstadoFilter.size > 0)
+        params.set("estado", [...effEstadoFilter].join(","));
+      if (effCargoFilter.size > 0)
+        params.set("cargo", [...effCargoFilter].join(","));
+      if (effDependenciaFilter.size > 0)
+        params.set("dep", [...effDependenciaFilter].join(","));
     }
     const qs = params.toString();
     return qs ? `/api/personal/export?${qs}` : "/api/personal/export";
-  }, [exportMode, exportIds, variant, yearFilter]);
+  }, [
+    exportMode,
+    exportIds,
+    variant,
+    yearFilter,
+    effEstadoFilter,
+    effCargoFilter,
+    effDependenciaFilter,
+  ]);
 
   // Etiqueta dinámica del botón refleja qué se va a exportar.
   const exportDescriptor = useMemo(() => {
     if (exportMode === "selection")
       return `${exportIds.length} seleccionado${exportIds.length === 1 ? "" : "s"}`;
     if (exportMode === "filtered")
-      return `${exportIds.length} resultado${exportIds.length === 1 ? "" : "s"} de búsqueda`;
+      return `${exportIds.length} resultado${exportIds.length === 1 ? "" : "s"} filtrado${exportIds.length === 1 ? "" : "s"}`;
     const bits: string[] = [];
     if (variant === "cas") bits.push("CAS");
     else if (variant === "indeterminados") bits.push("Indet/Confianza");
     else bits.push("Todos");
     if (yearFilter != null) bits.push(String(yearFilter));
+    // Las facetas SÍ se aplican en modo variant (params server-side), así que
+    // el descriptor lo refleja honestamente.
+    if (anyFacetActive) bits.push("filtrado");
     return bits.join(" · ");
-  }, [exportMode, exportIds.length, variant, yearFilter]);
+  }, [exportMode, exportIds.length, variant, yearFilter, anyFacetActive]);
 
   const exportLabel = `Exportar SUNEDU · ${exportDescriptor}`;
 
@@ -477,6 +604,25 @@ export function StaffClient({ rows, localOptions, perms, variant }: Props) {
             onChange={setYearFilter}
           />
         )}
+        <FacetFilter
+          label="Estado"
+          options={estadoOptions}
+          selected={effEstadoFilter}
+          onChange={setEstadoFilter}
+          searchable={false}
+        />
+        <FacetFilter
+          label="Cargo"
+          options={cargoOptions}
+          selected={effCargoFilter}
+          onChange={setCargoFilter}
+        />
+        <FacetFilter
+          label="Dependencia"
+          options={dependenciaOptions}
+          selected={effDependenciaFilter}
+          onChange={setDependenciaFilter}
+        />
         <ColumnVisibilityMenu
           cols={COLUMNS_BY_VARIANT[variant]}
           visibility={columnVisibility}
@@ -485,6 +631,22 @@ export function StaffClient({ rows, localOptions, perms, variant }: Props) {
           onReset={resetColumns}
         />
       </div>
+
+      {anyFacetActive && (
+        <FilterChips
+          estado={effEstadoFilter}
+          cargo={effCargoFilter}
+          dependencia={effDependenciaFilter}
+          cargoOptions={cargoOptions}
+          dependenciaOptions={dependenciaOptions}
+          resultCount={filtered.length}
+          totalCount={rows.length}
+          onClearEstado={() => setEstadoFilter(new Set())}
+          onClearCargo={() => setCargoFilter(new Set())}
+          onClearDependencia={() => setDependenciaFilter(new Set())}
+          onClearAll={clearAllFilters}
+        />
+      )}
 
       {selectedIds.size > 0 && (
         <div
@@ -1947,6 +2109,234 @@ function YearFilter({
           {y}
         </Button>
       ))}
+    </div>
+  );
+}
+
+// ─────────────────────────── Faceted filters (Estado / Cargo / Dependencia) ───────────────────────────
+
+/** Dropdown de filtro multi-selección. Reutiliza el patrón Popover + cmdk
+ *  Command (búsqueda + navegación por teclado) de FieldDatalist, pero con
+ *  checkboxes: seleccionar un ítem NO cierra el popover, para marcar varios.
+ *  Set vacío = sin filtro. El trigger muestra un badge con el conteo activo. */
+function FacetFilter<T extends string | number>({
+  label,
+  options,
+  selected,
+  onChange,
+  searchable = true,
+}: {
+  label: string;
+  options: { value: T; label: string }[];
+  selected: Set<T>;
+  onChange: (next: Set<T>) => void;
+  searchable?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const count = selected.size;
+  const toggle = (v: T) => {
+    const next = new Set(selected);
+    if (next.has(v)) next.delete(v);
+    else next.add(v);
+    onChange(next);
+  };
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant={count > 0 ? "default" : "outline"}
+          size="sm"
+          type="button"
+          aria-expanded={open}
+          aria-label={
+            count > 0
+              ? `${label}: ${count} seleccionado${count === 1 ? "" : "s"}`
+              : label
+          }
+        >
+          {label}
+          {count > 0 && (
+            <span
+              style={{
+                marginLeft: 2,
+                minWidth: 18,
+                height: 18,
+                padding: "0 5px",
+                borderRadius: 9,
+                background: "var(--surface)",
+                color: "var(--text)",
+                fontSize: 11,
+                fontWeight: 700,
+                display: "inline-grid",
+                placeItems: "center",
+              }}
+            >
+              {count}
+            </span>
+          )}
+          <ChevronsUpDown className="h-3.5 w-3.5 opacity-60" aria-hidden="true" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-64 p-0">
+        <Command>
+          {searchable && (
+            <CommandInput placeholder={`Buscar ${label.toLowerCase()}…`} />
+          )}
+          <CommandList>
+            <CommandEmpty>Sin coincidencias.</CommandEmpty>
+            <CommandGroup>
+              {options.map((o) => (
+                <CommandItem
+                  key={String(o.value)}
+                  value={o.label}
+                  onSelect={() => toggle(o.value)}
+                >
+                  <Checkbox
+                    checked={selected.has(o.value)}
+                    className="pointer-events-none"
+                    aria-hidden="true"
+                  />
+                  <span className="truncate">{o.label}</span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+          {count > 0 && (
+            <div style={{ borderTop: "1px solid var(--border)", padding: 4 }}>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start"
+                onClick={() => onChange(new Set())}
+              >
+                Limpiar {label.toLowerCase()}
+              </Button>
+            </div>
+          )}
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+/** Chips de filtros activos debajo de la barra. Una elección por faceta se
+ *  muestra con su etiqueta; múltiples, con el conteo. El ✕ limpia esa faceta.
+ *  A la derecha, el conteo de resultados vs total. */
+function FilterChips({
+  estado,
+  cargo,
+  dependencia,
+  cargoOptions,
+  dependenciaOptions,
+  resultCount,
+  totalCount,
+  onClearEstado,
+  onClearCargo,
+  onClearDependencia,
+  onClearAll,
+}: {
+  estado: Set<StaffStatus>;
+  cargo: Set<number>;
+  dependencia: Set<number>;
+  cargoOptions: { value: number; label: string }[];
+  dependenciaOptions: { value: number; label: string }[];
+  resultCount: number;
+  totalCount: number;
+  onClearEstado: () => void;
+  onClearCargo: () => void;
+  onClearDependencia: () => void;
+  onClearAll: () => void;
+}) {
+  const labelFor = (opts: { value: number; label: string }[], code: number) =>
+    opts.find((o) => o.value === code)?.label ?? String(code);
+
+  const chips: { key: string; text: string; onRemove: () => void }[] = [];
+  if (estado.size > 0) {
+    chips.push({
+      key: "estado",
+      text:
+        estado.size === 1 ? `Estado: ${[...estado][0]}` : `Estado: ${estado.size}`,
+      onRemove: onClearEstado,
+    });
+  }
+  if (cargo.size > 0) {
+    chips.push({
+      key: "cargo",
+      text:
+        cargo.size === 1
+          ? `Cargo: ${labelFor(cargoOptions, [...cargo][0])}`
+          : `Cargo: ${cargo.size}`,
+      onRemove: onClearCargo,
+    });
+  }
+  if (dependencia.size > 0) {
+    chips.push({
+      key: "dependencia",
+      text:
+        dependencia.size === 1
+          ? `Dependencia: ${labelFor(dependenciaOptions, [...dependencia][0])}`
+          : `Dependencia: ${dependencia.size}`,
+      onRemove: onClearDependencia,
+    });
+  }
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 8,
+        flexWrap: "wrap",
+        margin: "0 0 8px",
+        fontSize: 12.5,
+        color: "var(--text-muted)",
+      }}
+    >
+      <span style={{ fontWeight: 600 }}>Filtros:</span>
+      {chips.map((c) => (
+        <button
+          key={c.key}
+          type="button"
+          onClick={c.onRemove}
+          title="Quitar filtro"
+          className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--accent)] focus-visible:ring-offset-1"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+            padding: "3px 8px",
+            borderRadius: 999,
+            border: "1px solid var(--accent)",
+            background: "var(--accent-soft)",
+            color: "var(--accent-strong)",
+            fontSize: 12,
+            fontWeight: 600,
+            cursor: "pointer",
+          }}
+        >
+          {c.text}
+          <span aria-hidden="true">✕</span>
+        </button>
+      ))}
+      <button
+        type="button"
+        onClick={onClearAll}
+        className="rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--accent)] focus-visible:ring-offset-1"
+        style={{
+          background: "none",
+          border: "none",
+          color: "var(--text-muted)",
+          textDecoration: "underline",
+          cursor: "pointer",
+          fontSize: 12,
+          padding: "2px 4px",
+        }}
+      >
+        Limpiar todo
+      </button>
+      <span style={{ marginLeft: "auto" }}>
+        <b style={{ color: "var(--text)" }}>{resultCount}</b> de {totalCount}
+      </span>
     </div>
   );
 }

@@ -8,9 +8,14 @@
 //   variant=cas              → solo workers cuyo vínculo es DETERMINADO
 //   variant=indeterminados   → solo workers cuyo vínculo es INDETERMINADO o CONFIANZA
 //   year=2026                → solo workers con al menos un vínculo en ese año
-//   ids=cuid1,cuid2,cuid3    → solo esos workers específicos (override variant/year)
+//   cargo=3,9                → solo esos cargoCode (facetas de la UI)
+//   dep=9,4                  → solo esos dependenciaCode (facetas de la UI)
+//   estado=ACTIVO,LICENCIA   → estrecha el estado DENTRO de lo exportable
+//   ids=cuid1,cuid2,cuid3    → solo esos workers específicos (override variant/year/facetas)
 //
-// Combinaciones: variant=cas&year=2026 → workers con un vínculo DETERMINADO + año 2026.
+// Combinaciones: variant=cas&year=2026&cargo=3 → DETERMINADO + año 2026 + cargo 3.
+// Nota: el export SIEMPRE se limita a ACTIVO/LICENCIA (regla SUNEDU); el facet
+// `estado` solo puede estrechar dentro de ese conjunto, nunca ampliarlo.
 
 import { NextResponse, type NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
@@ -43,15 +48,44 @@ export async function GET(req: NextRequest) {
         .filter(Boolean)
     : [];
 
+  const parseCodes = (raw: string | null): number[] =>
+    raw
+      ? raw
+          .split(",")
+          .map((s) => Number(s.trim()))
+          .filter((n) => Number.isFinite(n))
+      : [];
+  const cargoCodes = parseCodes(url.searchParams.get("cargo"));
+  const depCodes = parseCodes(url.searchParams.get("dep"));
+  const estadosRaw = (url.searchParams.get("estado") ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+
   // Construye filtro Prisma.
   const where: Prisma.AdministrativeStaffWhereInput = {
     status: { in: ["ACTIVO", "LICENCIA"] },
   };
 
   if (ids.length > 0) {
-    // Exportación de selección específica — ignora variant/year.
+    // Exportación de selección específica — ignora variant/year/facetas.
     where.id = { in: ids };
   } else {
+    // Facetas de la UI (Cargo / Dependencia / Estado). El facet Estado solo
+    // puede estrechar dentro del conjunto exportable (ACTIVO/LICENCIA): si el
+    // usuario pidió solo PASIVO, la intersección es vacía → 0 filas.
+    if (cargoCodes.length > 0) {
+      where.cargoCode = { in: cargoCodes };
+    }
+    if (depCodes.length > 0) {
+      where.dependenciaCode = { in: depCodes };
+    }
+    if (estadosRaw.length > 0) {
+      const exportable = ["ACTIVO", "LICENCIA"] as const;
+      const allowed = exportable.filter((e) => estadosRaw.includes(e));
+      where.status = { in: [...allowed] };
+    }
+
     // Filtro compuesto sobre vínculos: condicion + año juntos en `some`.
     const vinculosFilter: Prisma.StaffEmploymentLinkWhereInput = {};
     if (variant === "cas") {
@@ -129,6 +163,8 @@ export async function GET(req: NextRequest) {
     else if (variant === "indeterminados") parts.push("INDET");
     else parts.push("TODOS");
     if (validYear != null) parts.push(String(validYear));
+    if (cargoCodes.length || depCodes.length || estadosRaw.length)
+      parts.push("FILTRADO");
   }
   parts.push(fechaStr);
   const filename = `${parts.join("_")}.xlsx`;
