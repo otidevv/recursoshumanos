@@ -480,6 +480,7 @@ export function StaffClient({ rows, localOptions, perms, variant }: Props) {
         <ColumnVisibilityMenu
           cols={COLUMNS_BY_VARIANT[variant]}
           visibility={columnVisibility}
+          variant={variant}
           onToggle={toggleColumn}
           onReset={resetColumns}
         />
@@ -1955,16 +1956,18 @@ function YearFilter({
 function ColumnVisibilityMenu({
   cols,
   visibility,
+  variant,
   onToggle,
   onReset,
 }: {
   cols: { key: string; label: string }[];
   visibility: Record<string, boolean>;
+  variant: StaffVariant;
   onToggle: (key: string, visible: boolean) => void;
   onReset: () => void;
 }) {
   const hiddenCount = cols.filter(
-    (c) => !REQUIRED_COLS.has(c.key) && visibility[c.key] === false,
+    (c) => !REQUIRED_COLS.has(c.key) && !isVisible(visibility, c.key, variant),
   ).length;
   return (
     <DropdownMenu>
@@ -1980,7 +1983,7 @@ function ColumnVisibilityMenu({
         <DropdownMenuSeparator />
         {cols.map((c) => {
           const required = REQUIRED_COLS.has(c.key);
-          const visible = required ? true : visibility[c.key] !== false;
+          const visible = isVisible(visibility, c.key, variant);
           return (
             <DropdownMenuCheckboxItem
               key={c.key}
@@ -2480,13 +2483,42 @@ const COLUMNS_BY_VARIANT: Record<StaffVariant, StaffColumn[]> = {
 // Columnas que NUNCA se pueden ocultar (siempre visibles)
 const REQUIRED_COLS = new Set<string>(["nombre"]);
 
+// Columnas ocultas de fábrica por variant. El usuario las puede reactivar desde
+// el menú "Columnas"; "Restaurar predeterminadas" vuelve a este estado. Una
+// elección explícita del usuario (persistida en localStorage) siempre gana
+// sobre este default.
+const DEFAULT_HIDDEN_BY_VARIANT: Record<StaffVariant, Set<string>> = {
+  // CAS: dejamos 9 columnas núcleo visibles (N°, Estado, Nombre, DNI, Año,
+  // Cargo, Condición, Inicio, Término) y ocultamos las 13 restantes.
+  cas: new Set<string>([
+    "gradoMaximo",
+    "grupoCarrera",
+    "carrera",
+    "sexo",
+    "regimen",
+    "plazaOrigen",
+    "plazaActual",
+    "celular",
+    "correoInst",
+    "correoPersonal",
+    "ubigeo",
+    "cumple",
+    "adenda",
+  ]),
+  indeterminados: new Set<string>(),
+  all: new Set<string>(),
+};
+
 function isVisible(
   visibility: Record<string, boolean>,
   key: string,
+  variant: StaffVariant,
 ): boolean {
   if (REQUIRED_COLS.has(key)) return true;
-  // Default: visible. Solo se oculta si visibility[key] === false explícito.
-  return visibility[key] !== false;
+  // Una elección explícita del usuario (true/false guardado) gana siempre.
+  if (key in visibility) return visibility[key];
+  // Sin elección previa: visible salvo que esté oculta por defecto en el variant.
+  return !DEFAULT_HIDDEN_BY_VARIANT[variant].has(key);
 }
 
 function StaffTable({
@@ -2515,7 +2547,7 @@ function StaffTable({
   onDelete: (s: StaffRow) => void;
 }) {
   const allCols = COLUMNS_BY_VARIANT[variant];
-  const cols = allCols.filter((c) => isVisible(columnVisibility, c.key));
+  const cols = allCols.filter((c) => isVisible(columnVisibility, c.key, variant));
   const totalCols = cols.length + 2; // + select + acción
 
   const selectedOnPage = rows.filter((r) => selectedIds.has(r.id)).length;
